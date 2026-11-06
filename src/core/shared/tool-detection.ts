@@ -422,7 +422,7 @@ export function getConfiguredTools(projectRoot: string): string[] {
         getToolSkillStatus(projectRoot, t.value).configured ||
         toolHasAnyConfiguredCommand(projectRoot, t.value) ||
         (
-          resolveCommandSurfaceCapability(t.value) === 'adapter-backed' &&
+          resolveCommandSurfaceCapability(t.value) === 'adapter' &&
           hasLegacySkills(projectRoot, t)
         ) ||
         (Boolean(t.skillsDir) &&
@@ -441,7 +441,7 @@ export function getConfiguredTools(projectRoot: string): string[] {
         tool.globalSkillsDir ||
         toolHasAnyConfiguredCommand(projectRoot, tool.value) ||
         (
-          resolveCommandSurfaceCapability(tool.value) === 'adapter-backed' &&
+          resolveCommandSurfaceCapability(tool.value) === 'adapter' &&
           hasLegacySkills(projectRoot, tool)
         ) ||
         activeProjectTools.has(tool.value)
