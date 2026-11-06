@@ -1,3 +1,4 @@
+import { WORKFLOW_REGISTRATIONS } from '../core/templates/workflow-registrations.js';
 /**
  * Command Reference Utilities
  *
@@ -51,20 +52,7 @@ export function transformCommandInvocations(
  * Keep in sync with WORKFLOW_TO_SKILL_DIR, which exists in both
  * src/core/profile-sync-drift.ts (exported) and src/core/init.ts (local copy).
  */
-const COMMAND_TO_SKILL_NAME: Record<string, string> = {
-  'explore': 'openspec-explore',
-  'new': 'openspec-new-change',
-  'continue': 'openspec-continue-change',
-  'apply': 'openspec-apply-change',
-  'update': 'openspec-update-change',
-  'ff': 'openspec-ff-change',
-  'sync': 'openspec-sync-specs',
-  'archive': 'openspec-archive-change',
-  'bulk-archive': 'openspec-bulk-archive-change',
-  'verify': 'openspec-verify-change',
-  'onboard': 'openspec-onboard',
-  'propose': 'openspec-propose',
-};
+const COMMAND_TO_SKILL_NAME: Record<string, string> = Object.fromEntries(WORKFLOW_REGISTRATIONS.flatMap(entry => 'command' in entry && entry.command ? [[entry.command.id, entry.skillDirName]] : []));
 
 /**
  * Tools whose skill invocation uses a non-default prefix. The default is `/`

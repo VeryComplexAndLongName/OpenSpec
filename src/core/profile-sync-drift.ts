@@ -1,3 +1,4 @@
+import { WORKFLOW_REGISTRATIONS } from './templates/workflow-registrations.js';
 import path from 'path';
 import * as fs from 'fs';
 import { AI_TOOLS } from './config.js';
@@ -25,20 +26,7 @@ type WorkflowId = (typeof ALL_WORKFLOWS)[number];
 /**
  * Maps workflow IDs to their skill directory names.
  */
-export const WORKFLOW_TO_SKILL_DIR: Record<WorkflowId, string> = {
-  'explore': 'openspec-explore',
-  'new': 'openspec-new-change',
-  'continue': 'openspec-continue-change',
-  'apply': 'openspec-apply-change',
-  'update': 'openspec-update-change',
-  'ff': 'openspec-ff-change',
-  'sync': 'openspec-sync-specs',
-  'archive': 'openspec-archive-change',
-  'bulk-archive': 'openspec-bulk-archive-change',
-  'verify': 'openspec-verify-change',
-  'onboard': 'openspec-onboard',
-  'propose': 'openspec-propose',
-};
+export const WORKFLOW_TO_SKILL_DIR = Object.fromEntries(WORKFLOW_REGISTRATIONS.map(entry => [entry.workflowId, entry.skillDirName])) as Record<WorkflowId, string>;
 
 function toKnownWorkflows(workflows: readonly string[]): WorkflowId[] {
   return workflows.filter(

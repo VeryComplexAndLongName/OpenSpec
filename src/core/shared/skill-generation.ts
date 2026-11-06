@@ -4,33 +4,8 @@
  * Shared utilities for generating skill and command files.
  */
 
-import {
-  getExploreSkillTemplate,
-  getNewChangeSkillTemplate,
-  getContinueChangeSkillTemplate,
-  getApplyChangeSkillTemplate,
-  getUpdateChangeSkillTemplate,
-  getFfChangeSkillTemplate,
-  getSyncSpecsSkillTemplate,
-  getArchiveChangeSkillTemplate,
-  getBulkArchiveChangeSkillTemplate,
-  getVerifyChangeSkillTemplate,
-  getOnboardSkillTemplate,
-  getOpsxProposeSkillTemplate,
-  getOpsxExploreCommandTemplate,
-  getOpsxNewCommandTemplate,
-  getOpsxContinueCommandTemplate,
-  getOpsxApplyCommandTemplate,
-  getOpsxUpdateCommandTemplate,
-  getOpsxFfCommandTemplate,
-  getOpsxSyncCommandTemplate,
-  getOpsxArchiveCommandTemplate,
-  getOpsxBulkArchiveCommandTemplate,
-  getOpsxVerifyCommandTemplate,
-  getOpsxOnboardCommandTemplate,
-  getOpsxProposeCommandTemplate,
-  type SkillTemplate,
-} from '../templates/skill-templates.js';
+import type { SkillTemplate, CommandTemplate } from '../templates/types.js';
+import { getWorkflowManifest } from '../templates/workflow-manifest.js';
 import type { CommandContent } from '../command-generation/index.js';
 import {
   assertWorkflowConditionalsResolved,
@@ -70,7 +45,7 @@ export interface SkillTemplateEntry {
  * Command template with ID mapping.
  */
 export interface CommandTemplateEntry {
-  template: ReturnType<typeof getOpsxExploreCommandTemplate>;
+  template: CommandTemplate;
   id: string;
 }
 
@@ -80,20 +55,9 @@ export interface CommandTemplateEntry {
  * @param workflowFilter - If provided, only return templates whose workflowId is in this array
  */
 export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemplateEntry[] {
-  const all: SkillTemplateEntry[] = [
-    { template: getExploreSkillTemplate(), dirName: 'openspec-explore', workflowId: 'explore' },
-    { template: getNewChangeSkillTemplate(), dirName: 'openspec-new-change', workflowId: 'new' },
-    { template: getContinueChangeSkillTemplate(), dirName: 'openspec-continue-change', workflowId: 'continue' },
-    { template: getApplyChangeSkillTemplate(), dirName: 'openspec-apply-change', workflowId: 'apply' },
-    { template: getUpdateChangeSkillTemplate(), dirName: 'openspec-update-change', workflowId: 'update' },
-    { template: getFfChangeSkillTemplate(), dirName: 'openspec-ff-change', workflowId: 'ff' },
-    { template: getSyncSpecsSkillTemplate(), dirName: 'openspec-sync-specs', workflowId: 'sync' },
-    { template: getArchiveChangeSkillTemplate(), dirName: 'openspec-archive-change', workflowId: 'archive' },
-    { template: getBulkArchiveChangeSkillTemplate(), dirName: 'openspec-bulk-archive-change', workflowId: 'bulk-archive' },
-    { template: getVerifyChangeSkillTemplate(), dirName: 'openspec-verify-change', workflowId: 'verify' },
-    { template: getOnboardSkillTemplate(), dirName: 'openspec-onboard', workflowId: 'onboard' },
-    { template: getOpsxProposeSkillTemplate(), dirName: 'openspec-propose', workflowId: 'propose' },
-  ];
+  const all: SkillTemplateEntry[] = getWorkflowManifest().map(entry => ({
+    template: entry.skill, dirName: entry.skillDirName, workflowId: entry.workflowId,
+  }));
 
   const installed = resolveInstalledWorkflows(workflowFilter);
   const selected = workflowFilter ? all.filter(entry => installed.has(entry.workflowId)) : all;
@@ -113,20 +77,9 @@ export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemp
  * @param workflowFilter - If provided, only return templates whose id is in this array
  */
 export function getCommandTemplates(workflowFilter?: readonly string[]): CommandTemplateEntry[] {
-  const all: CommandTemplateEntry[] = [
-    { template: getOpsxExploreCommandTemplate(), id: 'explore' },
-    { template: getOpsxNewCommandTemplate(), id: 'new' },
-    { template: getOpsxContinueCommandTemplate(), id: 'continue' },
-    { template: getOpsxApplyCommandTemplate(), id: 'apply' },
-    { template: getOpsxUpdateCommandTemplate(), id: 'update' },
-    { template: getOpsxFfCommandTemplate(), id: 'ff' },
-    { template: getOpsxSyncCommandTemplate(), id: 'sync' },
-    { template: getOpsxArchiveCommandTemplate(), id: 'archive' },
-    { template: getOpsxBulkArchiveCommandTemplate(), id: 'bulk-archive' },
-    { template: getOpsxVerifyCommandTemplate(), id: 'verify' },
-    { template: getOpsxOnboardCommandTemplate(), id: 'onboard' },
-    { template: getOpsxProposeCommandTemplate(), id: 'propose' },
-  ];
+  const all: CommandTemplateEntry[] = getWorkflowManifest().flatMap(entry =>
+    entry.command && entry.commandId ? [{ template: entry.command, id: entry.commandId }] : []
+  );
 
   const installed = resolveInstalledWorkflows(workflowFilter);
   const selected = workflowFilter ? all.filter(entry => installed.has(entry.id)) : all;
