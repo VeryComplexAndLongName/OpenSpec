@@ -84,6 +84,13 @@ Initialize OpenSpec in your project. Creates the folder structure and configures
 
 Default behavior uses global config defaults: profile `core`, delivery `both`, workflows `propose, explore, apply, update, sync, archive`.
 
+Delivery is resolved per tool. Under `commands`, adapter tools receive command
+files, while Codex, ForgeCode, Kimi Code and Mistral Vibe retain managed skills
+as invocable commands. A tool with no declared command surface causes init or
+update to fail before any migration, removal or generation. The error lists
+incompatible IDs and suggests `openspec config set delivery both` or
+`openspec config set delivery skills`. See [the delivery matrix](supported-tools.md#command-surfaces-and-delivery).
+
 ```
 openspec init [path] [options]
 ```

@@ -2,7 +2,8 @@ import { CommandAdapterRegistry } from './command-generation/index.js';
 import { getInvocationForAdapter, type CommandInvocation } from './command-generation/invocation.js';
 import type { Delivery } from './global-config.js';
 
-export type CommandSurfaceCapability = 'adapter-backed' | 'skills-invocable' | 'none';
+import { AI_TOOLS, type CommandSurfaceCapability } from './config.js';
+export type { CommandSurfaceCapability } from './config.js';
 
 /**
  * How the tool spells its OpenSpec commands: the name from the command files
@@ -15,12 +16,11 @@ export function resolveCommandInvocation(toolId: string): CommandInvocation | un
 }
 
 export function resolveCommandSurfaceCapability(toolId: string): CommandSurfaceCapability {
-  if (CommandAdapterRegistry.has(toolId)) {
-    return 'adapter-backed';
-  }
+  const explicit = AI_TOOLS.find(tool => tool.value === toolId)?.commandSurface;
+  if (explicit) return explicit;
 
-  if (toolId === 'codex') {
-    return 'skills-invocable';
+  if (CommandAdapterRegistry.has(toolId)) {
+    return 'adapter';
   }
 
   return 'none';
@@ -35,9 +35,31 @@ export function shouldRemoveSkillsForTool(toolId: string, delivery: Delivery): b
 }
 
 export function shouldGenerateCommandsForTool(toolId: string, delivery: Delivery): boolean {
-  return delivery !== 'skills' && resolveCommandSurfaceCapability(toolId) === 'adapter-backed';
+  return delivery !== 'skills' && resolveCommandSurfaceCapability(toolId) === 'adapter';
 }
 
 export function shouldReconcileCommandFilesForTool(toolId: string, delivery: Delivery): boolean {
-  return delivery === 'skills' && resolveCommandSurfaceCapability(toolId) === 'adapter-backed';
+  return delivery === 'skills' && resolveCommandSurfaceCapability(toolId) === 'adapter';
+}
+
+/** Refuse an empty command surface before any migration, cleanup or generation. */
+export function assertCommandSurfaceCompatibility(toolIds: readonly string[], delivery: Delivery): void {
+  if (delivery !== 'commands') return;
+  const unsupported = [...new Set(toolIds)]
+    .filter(id => resolveCommandSurfaceCapability(id) === 'none').sort();
+  if (unsupported.length > 0) {
+    throw new Error(
+      `delivery=commands is unsupported for tools: ${unsupported.join(', ')}. ` +
+      `Use 'openspec config set delivery both' or 'openspec config set delivery skills'.`
+    );
+  }
+}
+
+export function skillsCommandSurfaceNote(toolIds: readonly string[], delivery: Delivery): string | undefined {
+  if (delivery !== 'commands') return undefined;
+  const names = [...new Set(toolIds)].filter(id => resolveCommandSurfaceCapability(id) === 'skills-invocable')
+    .map(id => AI_TOOLS.find(tool => tool.value === id)?.name ?? id);
+  return names.length > 0
+    ? `Commands for ${names.join(', ')} use invocable skills; managed skills will be installed and retained.`
+    : undefined;
 }

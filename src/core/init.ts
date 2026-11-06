@@ -72,6 +72,8 @@ import {
 import { migrateIfNeeded, migrateLegacyToolDirs, describeLegacyMigration, keptInPlaceNotice, hasMovableContent, scanInstalledWorkflows as scanInstalledWorkflowsShared } from './migration.js';
 import {
   resolveCommandSurfaceCapability,
+  assertCommandSurfaceCompatibility,
+  skillsCommandSurfaceNote,
   resolveCommandInvocation,
   shouldGenerateCommandsForTool,
   shouldGenerateSkillsForTool,
@@ -224,20 +226,8 @@ export class InitCommand {
 
     await this.assertLanguageCanBeApplied(projectPath, openspecPath);
 
-    // Check for legacy artifacts and handle cleanup
-    const deferredLegacyCleanup = await this.handleLegacyCleanup(projectPath, extendMode);
-
-    // Migrate OpenSpec-managed skills left in renamed tool directories
-    // (e.g. .kimi -> .kimi-code) before detection so they stay recognized.
-    migrateLegacyToolDirs(projectPath);
-
     // Detect available tools in the project (task 7.1)
     const detectedTools = getAvailableTools(projectPath);
-
-    // Migration check: migrate existing projects to profile system (task 7.3)
-    if (extendMode) {
-      migrateIfNeeded(projectPath, detectedTools);
-    }
 
     // Validate profile override early so invalid values fail before tool setup.
     // The resolved value is consumed later when generation reads effective config.
@@ -260,6 +250,16 @@ export class InitCommand {
 
     // Validate selected tools
     const validatedTools = this.validateTools(selectedToolIds, toolStates, projectPath);
+    const delivery = getGlobalConfig().delivery ?? 'both';
+    assertCommandSurfaceCompatibility(selectedToolIds, delivery);
+    const surfaceNote = skillsCommandSurfaceNote(selectedToolIds, delivery);
+    if (surfaceNote) console.log(chalk.dim(surfaceNote));
+
+    // Compatibility is settled before any legacy migration or filesystem write.
+    const deferredLegacyCleanup = await this.handleLegacyCleanup(projectPath, extendMode);
+    migrateLegacyToolDirs(projectPath);
+    if (extendMode) migrateIfNeeded(projectPath, detectedTools);
+
 
     // Selecting a renamed tool is consent to leave its former directory:
     // init is about to write the current one, and leaving OpenSpec content
@@ -701,6 +701,12 @@ export class InitCommand {
       universalTool && validTools.includes(universalTool.value)
         ? `Tool not listed? Clear the search and pick "${universalTool.name}".`
         : undefined;
+
+    if ((getGlobalConfig().delivery ?? 'both') === 'commands') {
+      const note = skillsCommandSurfaceNote(validTools, 'commands');
+      if (note) console.log(chalk.dim(note));
+      console.log(chalk.dim('Tools without a command surface require delivery both or skills.'));
+    }
 
     const selectedTools = await searchableMultiSelect({
       message: `Select tools to set up (${validTools.length} available)`,
@@ -1270,7 +1276,7 @@ export class InitCommand {
       console.log(chalk.dim(`Commands skipped for: ${results.commandsSkipped.join(', ')} (no adapter)`));
     }
     if (results.skillsInvocableCommandSkips.length > 0) {
-      console.log(chalk.dim(`Commands skipped for: ${results.skillsInvocableCommandSkips.join(', ')} (uses skills)`));
+      console.log(chalk.dim(`Commands available through invocable skills: ${results.skillsInvocableCommandSkips.join(', ')}`));
     }
     if (results.removedCommandCount > 0) {
       console.log(chalk.dim(`Removed: ${results.removedCommandCount} command files (delivery: skills)`));

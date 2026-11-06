@@ -1,3 +1,6 @@
-# Status audit, 2026-11-06
+# Implementation audit, 2026-11-06
 
-Partially implemented, not ready to archive: src/core/command-surface.ts already provides adapter-backed/skills-invocable/none and Codex-aware per-tool generation. It does not implement the proposed explicit metadata override or general ForgeCode/Kimi/Mistral capability metadata; current init tests explicitly retain the Kimi none behavior. Full preflight/error/matrix acceptance remains open. The zero checklist is therefore not evidence that no prerequisite code exists.
+The capability model, metadata overrides, init/update preflight, per-tool
+delivery, detection/drift behavior, interactive summaries and docs are now
+implemented. Focused tests and actual CLI smoke passed; verification.md records
+the exact evidence and local limitations. Full server CI remains open.

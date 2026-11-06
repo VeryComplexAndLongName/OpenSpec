@@ -67,6 +67,8 @@ import {
 } from './migration.js';
 import {
   resolveCommandSurfaceCapability,
+  assertCommandSurfaceCompatibility,
+  skillsCommandSurfaceNote,
   resolveCommandInvocation,
   shouldGenerateCommandsForTool,
   shouldGenerateSkillsForTool,
@@ -149,6 +151,13 @@ export class UpdateCommand {
     if (!await FileSystemUtils.directoryExists(openspecPath)) {
       throw new Error(`No OpenSpec directory found. Run 'openspec init' first.`);
     }
+
+    // Read-only preflight must precede every migration and cleanup.
+    const preflightTools = getConfiguredToolsForProfileSync(resolvedProjectPath);
+    const preflightDelivery = getGlobalConfig().delivery ?? 'both';
+    assertCommandSurfaceCompatibility(preflightTools, preflightDelivery);
+    const surfaceNote = skillsCommandSurfaceNote(preflightTools, preflightDelivery);
+    if (surfaceNote) console.log(chalk.dim(surfaceNote));
 
     // 2. Migrate OpenSpec-managed skills left in renamed tool directories
     // (e.g. .kimi -> .kimi-code) so they stay detected and get refreshed,
@@ -431,7 +440,7 @@ export class UpdateCommand {
       console.log(chalk.red(`✗ Failed: ${failedTools.map(f => `${f.name} (${f.error})`).join(', ')}`));
     }
     if (skillsInvocableCommandSkips.length > 0) {
-      console.log(chalk.dim(`Commands skipped for: ${skillsInvocableCommandSkips.join(', ')} (uses skills)`));
+      console.log(chalk.dim(`Commands available through invocable skills: ${skillsInvocableCommandSkips.join(', ')}`));
     }
     if (removedCommandCount > 0) {
       console.log(chalk.dim(`Removed: ${removedCommandCount} command files (delivery: skills)`));

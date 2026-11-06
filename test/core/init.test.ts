@@ -767,7 +767,7 @@ describe('InitCommand', () => {
       await fs.writeFile(skillFile, 'existing global skill');
 
       const initCommand = new InitCommand({ tools: 'minimax-code', force: true });
-      await initCommand.execute(testDir);
+      await expect(initCommand.execute(testDir)).rejects.toThrow('unsupported for tools: minimax-code');
 
       expect(await fs.readFile(skillFile, 'utf-8')).toBe('existing global skill');
       expect(await directoryExists(path.join(testDir, '.minimax'))).toBe(false);
@@ -792,7 +792,7 @@ describe('InitCommand', () => {
       const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
       expect(
         logCalls.some(
-          (entry) => entry.includes('Commands skipped for: kimi') && entry.includes('(no adapter)'),
+          (entry) => entry.includes('Commands available through invocable skills: kimi'),
         ),
       ).toBe(true);
     });
@@ -1843,7 +1843,7 @@ describe('InitCommand - profile and detection features', () => {
     )).toBe(false);
   });
 
-  it('should defer global Codex prompt removal messaging until after interactive tool selection', async () => {
+  it('should report deferred global cleanup after compatible interactive tool selection', async () => {
     const promptDir = path.join(process.env.CODEX_HOME!, 'prompts');
     const legacyPrompt = path.join(promptDir, 'opsx-apply.md');
     await fs.mkdir(promptDir, { recursive: true });
@@ -1858,14 +1858,14 @@ describe('InitCommand - profile and detection features', () => {
 
     const toolSelectionOrder = searchableMultiSelectMock.mock.invocationCallOrder[0];
     const consoleLogMock = console.log as ReturnType<typeof vi.fn>;
-    const logsBeforeSelection = consoleLogMock.mock.calls
-      .filter((_, index) => consoleLogMock.mock.invocationCallOrder[index] < toolSelectionOrder)
+    const logsAfterSelection = consoleLogMock.mock.calls
+      .filter((_, index) => consoleLogMock.mock.invocationCallOrder[index] > toolSelectionOrder)
       .flat()
       .join('\n');
 
-    expect(logsBeforeSelection).toContain('Deferred global prompts cleanup');
-    expect(logsBeforeSelection).toContain('will only be removed after matching replacement skills are installed');
-    expect(logsBeforeSelection).toContain(`codex: ${legacyPrompt}`);
+    expect(logsAfterSelection).toContain('Deferred global prompts cleanup');
+    expect(logsAfterSelection).toContain('will only be removed after matching replacement skills are installed');
+    expect(logsAfterSelection).toContain(`codex: ${legacyPrompt}`);
     expect(await fileExists(legacyPrompt)).toBe(false);
   });
 
@@ -2215,45 +2215,24 @@ describe('InitCommand - profile and detection features', () => {
     expect(logCalls.some((entry) => entry.includes('more workflows are available'))).toBe(false);
   });
 
-  it('should not advertise missing workflows when nothing was generated at all', async () => {
-    saveGlobalConfig({
-      featureFlags: {},
-      profile: 'core',
-      delivery: 'commands',
-    });
-
-    // Kimi has no command adapter: the configuration correction is the whole
-    // story, so a "6 more workflows" note would point at the wrong problem.
-    const initCommand = new InitCommand({ tools: 'kimi', force: true });
-    await initCommand.execute(testDir);
-
-    const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
-    expect(logCalls.some((entry) => entry.includes('No skills or commands were generated'))).toBe(true);
-    expect(logCalls.some((entry) => entry.includes('more workflows are available'))).toBe(false);
+  it('should reject a missing command surface before installing anything', async () => {
+    saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery: 'commands' });
+    await expect(new InitCommand({ tools: 'hermes', force: true }).execute(testDir))
+      .rejects.toThrow('unsupported for tools: hermes');
+    expect(await directoryExists(path.join(testDir, 'openspec'))).toBe(false);
+    const logs = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().join('\n');
+    expect(logs).not.toContain('more workflows are available');
   });
 
-  it('should print a configuration correction, not a dead hint, when delivery=commands generates nothing (adapterless tool)', async () => {
-    saveGlobalConfig({
-      featureFlags: {},
-      profile: 'core',
-      delivery: 'commands',
-    });
-
-    const initCommand = new InitCommand({ tools: 'kimi', force: true });
-    await initCommand.execute(testDir);
-
-    // Kimi has no command adapter and delivery excludes skills: nothing is generated
-    expect(await fileExists(path.join(testDir, '.kimi-code', 'skills', 'openspec-explore', 'SKILL.md'))).toBe(false);
-    expect(await fileExists(path.join(testDir, '.kimi-code', 'commands'))).toBe(false);
-
-    const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
-    // No invocation hint may be shown — neither /opsx:* nor a skill reference exists
-    expect(logCalls.some((entry) => entry.includes('Start your first change'))).toBe(false);
-    const correction = logCalls.find((entry) => entry.includes('No skills or commands were generated'));
-    expect(correction).toBeTruthy();
-    expect(correction).toContain("openspec config set delivery both");
-    // Nothing was generated, so there is nothing an IDE restart would pick up
-    expect(logCalls.some((entry) => entry.includes('Restart your IDE'))).toBe(false);
+  it('should advertise Kimi skills as usable commands under commands delivery', async () => {
+    saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery: 'commands' });
+    await new InitCommand({ tools: 'kimi', force: true }).execute(testDir);
+    expect(await fileExists(path.join(testDir, '.kimi-code', 'skills', 'openspec-propose', 'SKILL.md'))).toBe(true);
+    expect(await directoryExists(path.join(testDir, '.kimi-code', 'commands'))).toBe(false);
+    const logs = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
+    expect(logs.find(line => line.includes('Start your first change'))).toContain('/skill:openspec-propose');
+    expect(logs.some(line => line.includes('No skills or commands were generated'))).toBe(false);
+    expect(logs.some(line => line.includes('Commands skipped for: kimi'))).toBe(false);
   });
 
   it('should print one usable hint per invocation syntax when adapterless tools disagree', async () => {
@@ -2408,62 +2387,32 @@ describe('InitCommand - profile and detection features', () => {
     expect(qwenHint).not.toContain('/opsx:propose');
   });
 
-  it('should not advertise an instruction for a tool that got no skills (delivery=commands, codex+kimi)', async () => {
-    saveGlobalConfig({
-      featureFlags: {},
-      profile: 'core',
-      delivery: 'commands',
-    });
-
-    const initCommand = new InitCommand({ tools: 'codex,kimi', force: true });
-    await initCommand.execute(testDir);
-
-    // Codex is skills-invocable so its skills are generated even under
-    // delivery=commands; kimi (capability none) gets nothing at all
-    expect(await fileExists(path.join(testDir, '.agents', 'skills', 'openspec-propose', 'SKILL.md'))).toBe(true);
-    expect(await fileExists(path.join(testDir, '.kimi-code'))).toBe(false);
-
-    const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
-    const startHints = logCalls.filter((entry) => entry.includes('Start your first change'));
-    // Only the codex instruction may be advertised — a Kimi line would point
-    // at skills that were never generated
-    expect(startHints).toHaveLength(1);
-    expect(startHints[0]).toContain('$openspec-propose');
-    expect(startHints[0]).not.toContain('Kimi');
-    expect(logCalls.some((entry) => entry.includes('/skill:openspec-'))).toBe(false);
-    // Kimi got zero artifacts, so it still deserves the configuration correction
-    const correction = logCalls.find((entry) => entry.includes('No skills or commands were generated for'));
-    expect(correction).toContain('Kimi Code');
-    expect(correction).not.toContain('Codex');
-    expect(correction).toContain("openspec config set delivery both");
+  it('should advertise both invocable skill syntaxes under commands delivery (codex+kimi)', async () => {
+    saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery: 'commands' });
+    await new InitCommand({ tools: 'codex,kimi', force: true }).execute(testDir);
+    for (const root of ['.agents', '.kimi-code']) {
+      expect(await fileExists(path.join(testDir, root, 'skills', 'openspec-propose', 'SKILL.md'))).toBe(true);
+    }
+    const logs = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
+    const hints = logs.filter(line => line.includes('Start your first change'));
+    expect(hints).toHaveLength(2);
+    expect(hints.some(line => line.includes('$openspec-propose'))).toBe(true);
+    expect(hints.some(line => line.includes('/skill:openspec-propose'))).toBe(true);
+    expect(logs.some(line => line.includes('No skills or commands were generated'))).toBe(false);
   });
 
-  it('should print a per-tool correction when an adapter-backed tool masks an adapterless one (delivery=commands, claude+kimi)', async () => {
-    saveGlobalConfig({
-      featureFlags: {},
-      profile: 'core',
-      delivery: 'commands',
-    });
-
-    const initCommand = new InitCommand({ tools: 'claude,kimi', force: true });
-    await initCommand.execute(testDir);
-
-    // Claude gets commands; kimi (no adapter, delivery excludes skills) gets nothing
+  it('should generate mixed commands and invocable skills under commands delivery (claude+kimi)', async () => {
+    saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery: 'commands' });
+    await new InitCommand({ tools: 'claude,kimi', force: true }).execute(testDir);
     expect(await fileExists(path.join(testDir, '.claude', 'commands', 'opsx', 'propose.md'))).toBe(true);
-    expect(await fileExists(path.join(testDir, '.kimi-code'))).toBe(false);
-
-    const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
-    // The /opsx: hint is correct for Claude, but Kimi must not be left with
-    // a dead instruction: the correction names it even though another tool
-    // generated commands
-    const startHints = logCalls.filter((entry) => entry.includes('Start your first change'));
-    expect(startHints).toHaveLength(1);
-    expect(startHints[0]).toContain('/opsx:propose');
-    const correction = logCalls.find((entry) => entry.includes('No skills or commands were generated for'));
-    expect(correction).toContain('Kimi Code');
-    expect(correction).not.toContain('Claude');
-    expect(correction).toContain("openspec config set delivery both");
-    expect(logCalls.some((entry) => entry.includes('/skill:openspec-'))).toBe(false);
+    expect(await directoryExists(path.join(testDir, '.claude', 'skills'))).toBe(false);
+    expect(await fileExists(path.join(testDir, '.kimi-code', 'skills', 'openspec-propose', 'SKILL.md'))).toBe(true);
+    const logs = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
+    const hints = logs.filter(line => line.includes('Start your first change'));
+    expect(hints).toHaveLength(2);
+    expect(hints.some(line => line.includes('/opsx:propose'))).toBe(true);
+    expect(hints.some(line => line.includes('/skill:openspec-propose'))).toBe(true);
+    expect(logs.some(line => line.includes('No skills or commands were generated'))).toBe(false);
   });
 
   it('should label per-tool hints when adapter-backed and adapterless tools are mixed (claude+kimi)', async () => {

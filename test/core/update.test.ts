@@ -838,17 +838,17 @@ metadata:
       expect(proposeSkill).toContain('/openspec-apply-change');
     });
 
-    it('should preserve agents ownership when it switches to commands-only', async () => {
+    it('should reject an unsupported agents selection while retaining the Codex owner', async () => {
       await new InitCommand({ tools: 'codex', force: true }).execute(testDir);
       setMockConfig({ featureFlags: {}, profile: 'core', delivery: 'commands' });
 
-      await new InitCommand({ tools: 'agents', force: true }).execute(testDir);
+      await expect(new InitCommand({ tools: 'agents', force: true }).execute(testDir)).rejects.toThrow('unsupported for tools: agents');
 
       const skillsDir = path.join(testDir, '.agents', 'skills');
-      expect(await fs.readFile(path.join(skillsDir, '.openspec-target'), 'utf-8')).toBe('agents\n');
+      expect(await fs.readFile(path.join(skillsDir, '.openspec-target'), 'utf-8')).toBe('codex\n');
       await expect(
         fs.access(path.join(skillsDir, 'openspec-propose', 'SKILL.md'))
-      ).rejects.toThrow();
+      ).resolves.toBeUndefined();
     });
 
     it('should not resurrect divergent legacy Codex skills after agents switches to commands-only', async () => {
@@ -862,15 +862,15 @@ metadata:
       );
       setMockConfig({ featureFlags: {}, profile: 'core', delivery: 'commands' });
 
-      await updateCommand.execute(testDir);
-      await updateCommand.execute(testDir);
+      await expect(updateCommand.execute(testDir)).rejects.toThrow('unsupported for tools: agents');
+      await expect(updateCommand.execute(testDir)).rejects.toThrow('unsupported for tools: agents');
 
       expect(await fs.readFile(path.join(canonicalSkills, '.openspec-target'), 'utf-8')).toBe(
         'agents\n'
       );
       await expect(
         fs.access(path.join(canonicalSkills, 'openspec-propose', 'SKILL.md'))
-      ).rejects.toThrow();
+      ).resolves.toBeUndefined();
       expect(
         await fs.readFile(path.join(legacySkills, 'openspec-propose', 'SKILL.md'), 'utf-8')
       ).toBe('divergent legacy Codex skill\n');
@@ -3496,7 +3496,7 @@ More user content after markers.
       consoleSpy.mockRestore();
     });
 
-    it('should not advertise missing workflows when no tool can receive one', async () => {
+    it('should retain usable Kimi skills after switching to commands delivery', async () => {
       // A project set up for a skills-only tool, then switched to
       // delivery=commands: the tool stays configured but can receive nothing,
       // so adding workflows would write nothing and the pointer would send the
@@ -3516,8 +3516,9 @@ More user content after markers.
         call.map(arg => String(arg)).join(' ')
       );
       // Proves the run got as far as the notes rather than bailing earlier
-      expect(calls.some(call => call.includes('No skills or commands remain for'))).toBe(true);
-      expect(calls.some(call => call.includes('more workflows are available'))).toBe(false);
+      expect(calls.some(call => call.includes('No skills or commands remain for'))).toBe(false);
+      expect(await FileSystemUtils.fileExists(path.join(testDir, '.kimi-code', 'skills', 'openspec-propose', 'SKILL.md'))).toBe(true);
+      expect(calls.some(call => call.includes('more workflows are available'))).toBe(true);
 
       consoleSpy.mockRestore();
     });
@@ -3691,7 +3692,7 @@ More user content after markers.
         expect.stringContaining('Updated: Codex')
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Commands skipped for: codex (uses skills)')
+        expect.stringContaining('Commands available through invocable skills: codex')
       );
 
       consoleSpy.mockRestore();
@@ -3741,50 +3742,23 @@ More user content after markers.
       await fs.writeFile(skillFile, 'existing global skill');
 
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      await updateCommand.execute(testDir);
+      await expect(updateCommand.execute(testDir)).rejects.toThrow('unsupported for tools: minimax-code');
 
       expect(await fs.readFile(skillFile, 'utf-8')).toBe('existing global skill');
       expect(await FileSystemUtils.directoryExists(path.join(testDir, '.minimax'))).toBe(false);
       const output = consoleSpy.mock.calls.flat().join('\n');
-      expect(output).toContain('up to date');
+      expect(output).not.toContain('Updated:');
       expect(output).not.toContain('Updated: MiniMax Code');
       consoleSpy.mockRestore();
     });
 
-    it('should remove skills for configured tools without command adapters in commands-only delivery', async () => {
-      setMockConfig({
-        featureFlags: {},
-        profile: 'core',
-        delivery: 'commands',
-      });
-
-      const { AI_TOOLS } = await import('../../src/core/config.js');
-      const { resolveCommandSurfaceCapability } = await import('../../src/core/command-surface.js');
-      const adapterlessTool = AI_TOOLS.find((tool) =>
-        tool.skillsDir && resolveCommandSurfaceCapability(tool.value) === 'none'
-      );
-      expect(adapterlessTool).toBeDefined();
-      if (!adapterlessTool?.skillsDir) {
-        return;
-      }
-
-      const skillsDir = path.join(testDir, adapterlessTool.skillsDir, 'skills');
-      await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
-      await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old');
-
-      const consoleSpy = vi.spyOn(console, 'log');
-      await expect(updateCommand.execute(testDir)).resolves.toBeUndefined();
-
-      expect(await FileSystemUtils.fileExists(
-        path.join(skillsDir, 'openspec-explore', 'SKILL.md')
-      )).toBe(false);
-
-      // The tool now has zero OpenSpec artifacts; the removal must not be
-      // silent — update prints the same configuration correction init does.
-      const logCalls = consoleSpy.mock.calls.flat().map(String);
-      const correction = logCalls.find((entry) => entry.includes('No skills or commands remain'));
-      expect(correction).toBeTruthy();
-      expect(correction).toContain("openspec config set delivery both");
+    it('should preserve all files when a configured tool has no command surface', async () => {
+      setMockConfig({ featureFlags: {}, profile: 'core', delivery: 'commands' });
+      const file = path.join(testDir, '.hermes', 'skills', 'openspec-explore', 'SKILL.md');
+      await fs.mkdir(path.dirname(file), { recursive: true });
+      await fs.writeFile(file, 'old');
+      await expect(updateCommand.execute(testDir)).rejects.toThrow('unsupported for tools: hermes');
+      expect(await fs.readFile(file, 'utf8')).toBe('old');
     });
 
     it('should apply config sync when templates are up to date', async () => {
