@@ -40,7 +40,7 @@ ${PROJECT_ROOT_GUARD}
    openspec status --change "<name>" --json
    \`\`\`
    Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used (e.g., "spec-driven")
+   - \`schemaName\`: The workflow being used (e.g., "openspec-default")
    - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context
    - Which artifacts exist for this change
 
@@ -219,7 +219,7 @@ ${PROJECT_ROOT_GUARD}
    openspec status --change "<name>" --json
    \`\`\`
    Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used (e.g., "spec-driven")
+   - \`schemaName\`: The workflow being used (e.g., "openspec-default")
    - \`planningHome\`, \`changeRoot\`, \`artifactPaths\`, and \`actionContext\`: path and scope context
    - Which artifacts exist for this change
 

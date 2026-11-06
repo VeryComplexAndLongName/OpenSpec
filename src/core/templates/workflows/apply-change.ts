@@ -61,9 +61,9 @@ ${PROJECT_ROOT_GUARD}
    openspec status --change "<name>" --json
    \`\`\`
    Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used (e.g., "spec-driven")
+   - \`schemaName\`: The workflow being used (e.g., "openspec-default")
    - \`planningHome\`, \`changeRoot\`, and \`actionContext\`: planning scope and edit constraints
-   - Which artifact contains the tasks (typically "tasks" for spec-driven, check status for others)
+   - Which artifact contains the tasks (typically "tasks" for openspec-default, check status for others)
 
 3. **Get apply instructions**
 
@@ -106,7 +106,7 @@ ${PROJECT_ROOT_GUARD}
 
    Read every file path listed under \`contextFiles\` from the apply instructions output.
    The files depend on the schema being used:
-   - **spec-driven**: proposal, specs, design, tasks
+   - **openspec-default**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
 
    Do not copy \`context\` or \`operationGuidance\` verbatim into implementation

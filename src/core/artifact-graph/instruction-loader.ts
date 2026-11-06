@@ -255,7 +255,7 @@ export function loadTemplate(
  * Schema resolution order:
  * 1. Explicit schemaName parameter (if provided)
  * 2. Schema from .openspec.yaml metadata (if exists in change directory)
- * 3. Default 'spec-driven'
+ * 3. Default 'openspec-default'
  *
  * @param projectRoot - Project root directory
  * @param changeName - Change name

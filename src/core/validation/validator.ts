@@ -1,3 +1,4 @@
+import { isDefaultSchemaName, LEGACY_DEFAULT_SCHEMA } from '../artifact-graph/schema-names.js';
 import { z, ZodError } from 'zod';
 import { readFileSync, promises as fs } from 'fs';
 import path from 'path';
@@ -643,10 +644,10 @@ export class Validator {
         /\.ya?ml$/,
         ''
       );
-      if (schemaName !== 'spec-driven') return false;
+      if (!isDefaultSchemaName(schemaName)) return false;
       const schemaDir = getSchemaDir(schemaName, projectRoot);
       if (schemaDir === null) return false;
-      const builtInSchemaDir = path.join(getPackageSchemasDir(), 'spec-driven');
+      const builtInSchemaDir = path.join(getPackageSchemasDir(), LEGACY_DEFAULT_SCHEMA);
       return (
         FileSystemUtils.canonicalizeExistingPath(schemaDir) ===
         FileSystemUtils.canonicalizeExistingPath(builtInSchemaDir)

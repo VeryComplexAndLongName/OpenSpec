@@ -17,7 +17,7 @@ export interface ResolvePlanningHomeOptions {
   allowImplicitRepoRoot?: boolean;
 }
 
-const REPO_DEFAULT_SCHEMA = 'spec-driven';
+import { DEFAULT_SCHEMA as REPO_DEFAULT_SCHEMA } from './artifact-graph/schema-names.js';
 
 function pathExistsAsDirectory(candidatePath: string): boolean {
   try {

@@ -76,7 +76,7 @@ export interface ArchiveInstructions {
 // Constants
 // -----------------------------------------------------------------------------
 
-export const DEFAULT_SCHEMA = 'spec-driven';
+export { DEFAULT_SCHEMA } from '../../core/artifact-graph/schema-names.js';
 
 // -----------------------------------------------------------------------------
 // Utility Functions

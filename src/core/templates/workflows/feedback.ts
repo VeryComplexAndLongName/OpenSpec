@@ -65,7 +65,7 @@ Suggestion: Add clearer error messages that explain dependency chains
 in the artifact workflow. Something like "Cannot create design.md
 because specs are not complete (0/2 done)."
 
-Context: Using the spec-driven schema with <path>/my-project
+Context: Using the openspec-default schema with <path>/my-project
 \`\`\`
 
 **Anonymization Examples**
