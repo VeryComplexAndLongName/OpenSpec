@@ -33,9 +33,11 @@ An 80/20 solution is to add a lightweight smoke harness for deterministic non-in
 
 - `qa-smoke-harness`: Deterministic, sandboxed CLI smoke validation with a single developer entrypoint
 
+- `developer-qa-workflow`: Standardized local/CI QA flow for CLI behavior and migration-sensitive scenarios
+
 ### Modified Capabilities
 
-- `developer-qa-workflow`: Standardized local/CI QA flow for CLI behavior and migration-sensitive scenarios
+None. The developer QA workflow has no canonical spec yet; its existing proposed scope is recorded as a new capability.
 
 ## Impact
 

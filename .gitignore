@@ -1,4 +1,5 @@
 # Logs
+/artifacts/qa-smoke/
 logs
 *.log
 npm-debug.log*
