@@ -32,7 +32,7 @@
 - [x] 5.2 Add tool-profile consistency tests (skillsDir support and adapter/profile alignment)
 - [x] 5.3 Add transform applicability/order tests
 - [x] 5.4 Expand parity tests for representative workflow/tool matrix
-- [ ] 5.5 Run full test suite and verify generated artifacts remain stable
+- [x] 5.5 Run full test suite and verify generated artifacts remain stable
 
 ## 6. Cleanup and Documentation
 
