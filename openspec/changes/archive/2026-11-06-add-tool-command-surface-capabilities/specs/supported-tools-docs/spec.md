@@ -1,3 +1,6 @@
+## Purpose
+Explain supported tool integrations, their command surfaces and delivery behavior so users can select usable workflow artifacts and resolve incompatible configurations.
+
 ## ADDED Requirements
 
 ### Requirement: Command surface delivery guidance

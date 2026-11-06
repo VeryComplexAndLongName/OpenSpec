@@ -1,7 +1,7 @@
 # supported-tools-docs Specification
 
 ## Purpose
-TBD - created by archiving change add-tool-command-surface-capabilities. Update Purpose after archive.
+Explain supported tool integrations, their command surfaces and delivery behavior so users can select usable workflow artifacts and resolve incompatible configurations.
 
 ## Requirements
 
