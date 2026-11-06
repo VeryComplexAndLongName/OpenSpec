@@ -10,6 +10,7 @@ export const GLOBAL_DATA_DIR_NAME = 'openspec';
 // TypeScript types
 export type Profile = 'core' | 'custom';
 export type Delivery = 'both' | 'skills' | 'commands';
+export type InstallScope = 'global' | 'project';
 
 /** Telemetry section of global config (identity + opt-out). */
 export interface TelemetryConfig {

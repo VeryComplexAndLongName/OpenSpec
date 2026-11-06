@@ -7,10 +7,10 @@
 
 ## 2. Tool Capability Metadata + Resolvers
 
-- [ ] 2.1 Extend `AI_TOOLS` metadata to declare scope support per surface (skills/commands)
-- [ ] 2.2 Add shared install-target resolver for skills and commands using requested scope + tool support
-- [ ] 2.3 Implement deterministic fallback/error behavior when preferred scope is unsupported, including default behavior when scope support metadata is absent
-- [ ] 2.4 Add unit tests for scope resolution (preferred, fallback, and hard-fail paths)
+- [x] 2.1 Extend `AI_TOOLS` metadata to declare scope support per surface (skills/commands)
+- [x] 2.2 Add shared install-target resolver for skills and commands using requested scope + tool support
+- [x] 2.3 Implement deterministic fallback/error behavior when preferred scope is unsupported, including default behavior when scope support metadata is absent
+- [x] 2.4 Add unit tests for scope resolution (preferred, fallback, and hard-fail paths)
 
 ## 3. Command Generation Contract
 
