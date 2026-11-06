@@ -1,3 +1,4 @@
+import { WORKFLOW_REGISTRATIONS, type CoreWorkflowRegistration } from './templates/workflow-registrations.js';
 /**
  * Profile System
  *
@@ -11,25 +12,12 @@ import type { Profile } from './global-config.js';
  * Core workflows included in the 'core' profile.
  * These provide the streamlined experience for new users.
  */
-export const CORE_WORKFLOWS = ['propose', 'explore', 'apply', 'update', 'sync', 'archive'] as const;
+export const CORE_WORKFLOWS = Object.freeze(WORKFLOW_REGISTRATIONS.filter((entry): entry is CoreWorkflowRegistration => 'coreOrder' in entry).sort((a,b) => a.coreOrder-b.coreOrder).map(entry => entry.workflowId));
 
 /**
  * All available workflows in the system.
  */
-export const ALL_WORKFLOWS = [
-  'propose',
-  'explore',
-  'new',
-  'continue',
-  'apply',
-  'update',
-  'ff',
-  'sync',
-  'archive',
-  'bulk-archive',
-  'verify',
-  'onboard',
-] as const;
+export const ALL_WORKFLOWS = Object.freeze([...WORKFLOW_REGISTRATIONS].sort((a,b) => a.profileOrder-b.profileOrder).map(entry => entry.workflowId));
 
 export type WorkflowId = (typeof ALL_WORKFLOWS)[number];
 export type CoreWorkflowId = (typeof CORE_WORKFLOWS)[number];

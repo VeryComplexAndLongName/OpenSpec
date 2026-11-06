@@ -1,3 +1,4 @@
+import { artifactSyncEngine, renderToolWorkflowReference, renderSkillForTool } from './artifact-sync.js';
 /**
  * Update Command
  *
@@ -11,18 +12,15 @@ import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
-import { getSkillReferenceTransformer, getTransformerForTool, transformToSkillReferences } from '../utils/command-references.js';
+import { getSkillReferenceTransformer, transformToSkillReferences } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
 import {
-  generateCommands,
   CommandAdapterRegistry,
 } from './command-generation/index.js';
 import {
   getToolSkillStatus,
   getToolVersionStatus,
   getSkillTemplates,
-  getCommandContents,
-  generateSkillContent,
   getToolsWithSkillsDir,
   hasGlobalSkillTarget,
   resolveToolSkillsDir,
@@ -69,7 +67,6 @@ import {
   resolveCommandSurfaceCapability,
   assertCommandSurfaceCompatibility,
   skillsCommandSurfaceNote,
-  resolveCommandInvocation,
   shouldGenerateCommandsForTool,
   shouldGenerateSkillsForTool,
   shouldReconcileCommandFilesForTool,
@@ -329,25 +326,13 @@ export class UpdateCommand {
         const shouldGenerateCommands = shouldGenerateCommandsForTool(tool.value, delivery);
         const writesSkills = !tool.skillsDir || sharedSkillWriters.has(tool.value);
         const toolWorkflows = legacyWorkflowOverrides[tool.value] ?? desiredWorkflows;
-        const skillTemplates = getSkillTemplates(toolWorkflows);
-        const commandContents = getCommandContents(toolWorkflows);
 
         // Generate skill files if delivery includes skills
         if (shouldGenerateSkills && writesSkills) {
-          for (const { template, dirName } of skillTemplates) {
-            const skillDir = path.join(skillsDir, dirName);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-
-            const transformer = getTransformerForTool(
-              tool.value,
-              delivery,
-              resolveCommandSurfaceCapability(tool.value),
-              resolveCommandInvocation(tool.value)
-            );
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-            FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
-            await FileSystemUtils.writeFile(skillFile, skillContent);
-          }
+          await artifactSyncEngine.sync({
+            projectRoot: resolvedProjectPath, toolId: tool.value, delivery, workflows: toolWorkflows,
+            version: OPENSPEC_VERSION, surface: 'skill', skillsPath: skillsDir, skillsRoot: skillsRoot,
+          });
           writeSharedSkillTarget(resolvedProjectPath, tool.value);
 
           removedDeselectedSkillCount += await this.removeUnselectedSkillDirs(
@@ -378,24 +363,16 @@ export class UpdateCommand {
 
         // Generate commands if delivery includes commands
         if (shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(commandContents, adapter);
+          await artifactSyncEngine.sync({
+            projectRoot: resolvedProjectPath, toolId: tool.value, delivery, workflows: toolWorkflows,
+            version: OPENSPEC_VERSION, surface: 'command', skillsPath: skillsDir, skillsRoot: skillsRoot,
+          });
 
-            for (const cmd of generatedCommands) {
-              const commandFile = FileSystemUtils.resolveProjectArtifactPath(
-                resolvedProjectPath,
-                cmd.path
-              );
-              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
-            }
-
-            removedDeselectedCommandCount += await this.removeUnselectedCommandFiles(
-              resolvedProjectPath,
-              toolId,
-              toolWorkflows
-            );
-          }
+          removedDeselectedCommandCount += await this.removeUnselectedCommandFiles(
+            resolvedProjectPath,
+            toolId,
+            toolWorkflows
+          );
         } else if (deliveryIncludesCommands && resolveCommandSurfaceCapability(tool.value) === 'skills-invocable') {
           skillsInvocableCommandSkips.push(tool.value);
         }
@@ -477,13 +454,7 @@ export class UpdateCommand {
             if (shouldGenerateCommandsForTool(toolId, delivery)) {
               // Name the command the tool's files actually answer to:
               // /opsx-<id> where the filename is the command name.
-              const transformer = getTransformerForTool(
-                toolId,
-                delivery,
-                resolveCommandSurfaceCapability(toolId),
-                resolveCommandInvocation(toolId)
-              );
-              return transformer ? transformer(command) : command;
+              return renderToolWorkflowReference(command, toolId, delivery);
             }
             return getSkillReferenceTransformer(toolId)(command);
           })
@@ -619,19 +590,13 @@ export class UpdateCommand {
       if (!getToolSkillStatus(projectPath, tool.value).configured) return false;
 
       const skillsDir = resolveToolSkillsDir(projectPath, tool);
-      const transformer = getTransformerForTool(
-        tool.value,
-        delivery,
-        resolveCommandSurfaceCapability(tool.value),
-        resolveCommandInvocation(tool.value)
-      );
 
       return getSkillTemplates(workflowsForTool(toolId)).some(({ template, dirName }) => {
         const skillFile = path.join(skillsDir, dirName, 'SKILL.md');
         if (!fs.existsSync(skillFile)) return false;
         try {
           const existing = fs.readFileSync(skillFile, 'utf-8');
-          const generated = generateSkillContent(template, OPENSPEC_VERSION, transformer);
+          const generated = renderSkillForTool(template, OPENSPEC_VERSION, tool.value, delivery);
           return normalizeGeneratedFile(existing) !== normalizeGeneratedFile(generated);
         } catch {
           return true;
@@ -1312,8 +1277,6 @@ export class UpdateCommand {
         if (tool.value === 'codex' && inferredCodexWorkflows.length > 0) {
           workflowOverrides[tool.value] = inferredCodexWorkflows;
         }
-        const skillTemplates = getSkillTemplates(toolWorkflows);
-        const commandContents = getCommandContents(toolWorkflows);
 
         // Never overwrite a shared skills root owned by another tool. A tool
         // with its own command surface can still install those commands: this
@@ -1339,37 +1302,19 @@ export class UpdateCommand {
 
         // Create skill files when delivery includes skills
         if (shouldGenerateSkills && writesSkills) {
-          for (const { template, dirName } of skillTemplates) {
-            const skillDir = path.join(skillsDir, dirName);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-
-            const transformer = getTransformerForTool(
-              tool.value,
-              delivery,
-              resolveCommandSurfaceCapability(tool.value),
-              resolveCommandInvocation(tool.value)
-            );
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-            FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
-            await FileSystemUtils.writeFile(skillFile, skillContent);
-          }
+          await artifactSyncEngine.sync({
+            projectRoot: projectPath, toolId: tool.value, delivery, workflows: toolWorkflows,
+            version: OPENSPEC_VERSION, surface: 'skill', skillsPath: skillsDir, skillsRoot: skillsRoot,
+          });
           writeSharedSkillTarget(projectPath, tool.value);
         }
 
         // Create commands when delivery includes commands
         if (shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(commandContents, adapter);
-
-            for (const cmd of generatedCommands) {
-              const commandFile = FileSystemUtils.resolveProjectArtifactPath(
-                projectPath,
-                cmd.path
-              );
-              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
-            }
-          }
+          await artifactSyncEngine.sync({
+            projectRoot: projectPath, toolId: tool.value, delivery, workflows: toolWorkflows,
+            version: OPENSPEC_VERSION, surface: 'command', skillsPath: skillsDir, skillsRoot: skillsRoot,
+          });
         }
 
         spinner.succeed(`Setup complete for ${tool.name}`);

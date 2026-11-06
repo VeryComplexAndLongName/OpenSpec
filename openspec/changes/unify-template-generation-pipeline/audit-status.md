@@ -1,3 +1,6 @@
-# Status audit, 2026-11-06
+# Implementation audit, 2026-11-06
 
-Existing template modules are present, but the proposed canonical manifest, ToolProfileRegistry, ordered transforms and shared artifact sync engine are not implemented as specified. Do not equate current workflow templates with completion of this refactor.
+Manifest/profile/transform/sync-engine cutover and developer documentation are
+implemented with unchanged golden/public artifacts. Focused fidelity, writer
+safety and actual CLI smoke passed; see verification.md. Full server CI remains
+the gate before archive.

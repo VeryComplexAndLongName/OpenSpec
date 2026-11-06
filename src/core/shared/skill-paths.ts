@@ -2,6 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { AI_TOOLS, type AIToolOption } from '../config.js';
+import { ToolProfileRegistry } from '../tool-profiles.js';
 
 export type SkillCapableTool = AIToolOption & (
   | { skillsDir: string }
@@ -25,13 +26,14 @@ export function resolveToolSkillsDir(
   tool: SkillCapableTool,
   options: { homeDir?: string } = {}
 ): string {
-  if (tool.globalSkillsDir) {
+  const profile = ToolProfileRegistry.from(tool);
+  if (profile.globalSkillsDir) {
     const homeDir = options.homeDir ?? process.env.USERPROFILE ?? process.env.HOME ?? os.homedir();
-    return path.join(homeDir, tool.globalSkillsDir, 'skills');
+    return path.join(homeDir, profile.globalSkillsDir, 'skills');
   }
 
-  if (tool.skillsDir) {
-    return path.join(projectRoot, tool.skillsDir, 'skills');
+  if (profile.skillsDir) {
+    return path.join(projectRoot, profile.skillsDir, 'skills');
   }
 
   throw new Error(`Tool '${tool.value}' does not support skill generation.`);
