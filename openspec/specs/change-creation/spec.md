@@ -77,3 +77,16 @@ The system SHALL record the `created` value in metadata for a newly created chan
 - **AND** the current instant is `2026-07-14T16:30:00.000Z`
 - **WHEN** the user creates a change
 - **THEN** the new change's `.openspec.yaml` contains `created: 2026-07-15`
+
+### Requirement: Stack Metadata Scaffolding
+Change creation workflows SHALL support optional dependency metadata for new or split changes.
+
+#### Scenario: Create change with stack metadata
+- **WHEN** a change is created with stack metadata inputs
+- **THEN** creation SHALL persist metadata fields in change configuration
+- **AND** persisted metadata SHALL be validated against change metadata schema rules
+
+#### Scenario: Split-generated child metadata
+- **WHEN** child changes are generated from a split workflow
+- **THEN** each child SHALL include a `parent` link to the source change
+- **AND** SHALL include dependency metadata needed for deterministic sequencing

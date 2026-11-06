@@ -20,9 +20,22 @@ export const InitiativeLinkSchema = z.object({
 
 export type InitiativeLink = z.infer<typeof InitiativeLinkSchema>;
 
+const StackValueSchema = z.string().trim().min(1);
+const StackValuesSchema = z.array(StackValueSchema).transform(values => [...new Set(values)]);
+const StackIdSchema = StackValueSchema.refine(isKebabId, 'Change IDs must be kebab-case');
+export const StackMetadataSchema = z.object({
+  dependsOn: z.array(StackIdSchema).transform(values => [...new Set(values)]).optional(),
+  provides: StackValuesSchema.optional(),
+  requires: StackValuesSchema.optional(),
+  touches: StackValuesSchema.optional(),
+  parent: StackIdSchema.optional(),
+});
+export type StackMetadata = z.infer<typeof StackMetadataSchema>;
+
 // Per-change metadata schema. The schema field is validated against available
 // workflow schemas when metadata is read or written.
 export const ChangeMetadataSchema = z.object({
+  ...StackMetadataSchema.shape,
   schema: z.string().min(1, { message: 'schema is required' }),
   created: z
     .string()

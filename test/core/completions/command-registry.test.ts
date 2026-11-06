@@ -166,6 +166,9 @@ describe('command completion registry', () => {
     walk(program, '');
     expect(seen.sort()).toEqual([
       'archive',
+      'change graph',
+      'change next',
+      'change split',
       'context',
       'doctor',
       'instructions',
@@ -207,6 +210,11 @@ describe('command completion registry', () => {
     expect(newChange?.flags.map((flag) => flag.name)).toEqual([
       'description',
       'goal',
+      'depends-on',
+      'provides',
+      'requires',
+      'touches',
+      'parent',
       'schema',
       'json',
       'store',

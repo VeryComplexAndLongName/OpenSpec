@@ -28,6 +28,7 @@ import {
 } from '../parsers/requirement-text.js';
 import { findMainSpecStructureIssues } from '../parsers/spec-structure.js';
 import { FileSystemUtils } from '../../utils/file-system.js';
+import { loadChangeStack } from '../change-stack.js';
 import { discoverSpecFiles, findUnreadDeltaFiles, hasAnyFileUnder } from '../../utils/spec-discovery.js';
 import {
   METADATA_FILENAME,
@@ -527,6 +528,17 @@ export class Validator {
       issues.push(...await this.collectTaskFileIssues(changeDir, options.projectRoot));
     }
 
+    const changesDir = path.dirname(changeDir);
+    const stackRoot = options.projectRoot ?? (
+      path.basename(changesDir) === 'changes' && path.basename(path.dirname(changesDir)) === 'openspec'
+        ? path.resolve(changesDir, '../..') : undefined
+    );
+    if (stackRoot) {
+      issues.push(...loadChangeStack(stackRoot).issues
+        .filter(issue => issue.change === path.basename(changeDir))
+        .map(({ level, path: issuePath, message, advisory }) => ({ level, path: issuePath, message, ...(advisory ? { advisory } : {}) })));
+    }
+
     return this.createReport(issues);
   }
 
@@ -983,7 +995,7 @@ export class Validator {
     const info = issues.filter(i => i.level === 'INFO').length;
     
     const valid = this.strictMode 
-      ? errors === 0 && warnings === 0
+      ? errors === 0 && !issues.some(issue => issue.level === 'WARNING' && !issue.advisory)
       : errors === 0;
     
     return {

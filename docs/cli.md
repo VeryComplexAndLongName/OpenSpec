@@ -2,10 +2,28 @@
 
 The OpenSpec CLI (`openspec`) provides terminal commands for project setup, validation, status inspection, and management. These commands complement the AI slash commands (like `/opsx:propose`) documented in [Commands](commands.md).
 
-
 The preferred standard workflow name is `openspec-default`; `spec-driven`
 remains a fully supported alias. Existing project configs need no migration.
 See [Schema aliases](schema-aliases.md) for selection and override behavior.
+
+## Change stack planning
+
+```sh
+openspec change graph [--json] [--store <id>]
+openspec change next [--json] [--store <id>]
+openspec change split <id> [--slices first,second] [--overwrite | --force] [--json]
+openspec new change <id> --depends-on predecessor --parent parent-plan \
+  --provides contract --requires prerequisite --touches cli-init,src/core
+```
+
+Graph shows explicit dependencies and deterministic depth/ID order. Next lists
+valid changes whose predecessors are archived. Cycles fail with the same
+diagnostic as validation; missing/transitively blocked paths remain excluded.
+Archive ordering cannot be bypassed with spec-validation flags. Split preserves
+the exact original unfinished plan and creates linked child scaffolds; a second
+split needs explicit overwrite. See [Change stacks](change-stacks.md) for the
+metadata contract, capability-marker validation, preservation behavior and
+required rewiring of existing implementation consumers before splitting.
 
 ## Summary
 
