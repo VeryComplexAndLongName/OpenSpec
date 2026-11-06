@@ -39,7 +39,7 @@ This workflow revises artifacts that already exist; `/openspec-continue-change` 
 
    When prompting, present the top 3-4 most recently modified changes as options, showing:
    - Change name
-   - Schema (from `schema` field if present, otherwise "spec-driven")
+   - Schema (from `schema` field if present, otherwise "openspec-default")
    - Status (e.g., "0/5 tasks", "complete", "no tasks")
    - How recently it was modified (from `lastModified` field)
 
@@ -52,7 +52,7 @@ This workflow revises artifacts that already exist; `/openspec-continue-change` 
    openspec status --change "<name>" --json
    ```
    Parse the JSON to understand current state. The response includes:
-   - `schemaName`: The workflow schema being used (e.g., "spec-driven")
+   - `schemaName`: The workflow schema being used (e.g., "openspec-default")
    - `artifacts`: Array of artifacts with their status ("done", "skipped", "ready", "blocked")
    - `isPlanningComplete`: Boolean indicating if all planning artifacts are complete. Older CLI versions expose the same value as `isComplete`.
    - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context. Use these instead of assuming repo-local paths.

@@ -153,7 +153,7 @@ describe('InitCommand', () => {
       expect(await fileExists(configPath)).toBe(true);
 
       const content = await fs.readFile(configPath, 'utf-8');
-      expect(content).toContain('schema: spec-driven');
+      expect(content).toContain('schema: openspec-default');
     });
 
     it('should add the requested artifact language to a new config', async () => {

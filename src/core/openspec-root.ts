@@ -14,7 +14,8 @@ export const OPENSPEC_CONFIG_YML = 'openspec/config.yml';
 export const OPENSPEC_SPECS_DIR = 'openspec/specs';
 export const OPENSPEC_CHANGES_DIR = 'openspec/changes';
 export const OPENSPEC_ARCHIVE_DIR = 'openspec/changes/archive';
-export const DEFAULT_OPENSPEC_SCHEMA = 'spec-driven';
+import { DEFAULT_SCHEMA } from './artifact-graph/schema-names.js';
+export const DEFAULT_OPENSPEC_SCHEMA = DEFAULT_SCHEMA;
 export const DIRECTORY_ANCHOR_FILE_NAME = '.gitkeep';
 
 // Git cannot track empty directories, so setup anchors otherwise-empty

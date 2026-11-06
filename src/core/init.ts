@@ -97,7 +97,7 @@ const { version: OPENSPEC_VERSION } = require('../../package.json');
 // Constants
 // -----------------------------------------------------------------------------
 
-const DEFAULT_SCHEMA = 'spec-driven';
+import { DEFAULT_SCHEMA } from './artifact-graph/schema-names.js';
 
 function formatLanguageContext(language: string): string {
   return [

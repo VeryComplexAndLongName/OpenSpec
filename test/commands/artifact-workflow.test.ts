@@ -93,7 +93,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status', '--change', 'minimal-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('minimal-change');
-      expect(result.stdout).toContain('spec-driven');
+      expect(result.stdout).toContain('openspec-default');
       expect(result.stdout).toContain('1/4 artifacts complete');
     });
 
@@ -117,7 +117,7 @@ describe('artifact-workflow CLI commands', () => {
 
       const json = JSON.parse(result.stdout);
       expect(json.changeName).toBe('json-change');
-      expect(json.schemaName).toBe('spec-driven');
+      expect(json.schemaName).toBe('openspec-default');
       expect(json.isPlanningComplete).toBe(false);
       expect(json.isComplete).toBe(false);
       expect(Array.isArray(json.artifacts)).toBe(true);
@@ -542,7 +542,7 @@ describe('artifact-workflow CLI commands', () => {
     it('shows template paths for default schema', async () => {
       const result = await runCLI(['templates'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('Schema: openspec-default');
       expect(result.stdout).toContain('proposal:');
       expect(result.stdout).toContain('design:');
       expect(result.stdout).toContain('specs:');
@@ -730,7 +730,7 @@ The system SHALL support the example behavior.
         path.join(changesDir, 'goal-change', '.openspec.yaml'),
         'utf-8'
       );
-      expect(metadata).toContain('schema: spec-driven');
+      expect(metadata).toContain('schema: openspec-default');
       expect(metadata).toContain('goal: Improve billing');
       expect(metadata).not.toContain('affected_areas');
       expect(metadata).not.toContain('initiative');
@@ -780,7 +780,7 @@ The system SHALL support the example behavior.
       });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('## Apply: apply-change');
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('Schema: openspec-default');
       expect(result.stdout).toContain('### Context Files');
       expect(result.stdout).toContain('### Instruction');
     });
@@ -823,7 +823,7 @@ operations:
       const expectedProposalPath = canonical(path.join(changesDir, 'json-apply', 'proposal.md'));
       const expectedSpecPath = canonical(path.join(changesDir, 'json-apply', 'specs', 'test-spec.md'));
       expect(json.changeName).toBe('json-apply');
-      expect(json.schemaName).toBe('spec-driven');
+      expect(json.schemaName).toBe('openspec-default');
       expect(json.state).toBe('ready');
       expect(json.contextFiles).toBeDefined();
       expect(typeof json.contextFiles).toBe('object');
@@ -1112,7 +1112,7 @@ operations:
 
       const json = JSON.parse(result.stdout);
       // spec-driven schema has apply block with requires: [tasks], so should be ready
-      expect(json.schemaName).toBe('spec-driven');
+      expect(json.schemaName).toBe('openspec-default');
       expect(json.state).toBe('ready');
     });
 
@@ -1608,7 +1608,7 @@ rules:
         );
         expect(statusResult.exitCode).toBe(0);
         expect(statusResult.stdout).toContain('no-config-change');
-        expect(statusResult.stdout).toContain('spec-driven'); // Default schema
+        expect(statusResult.stdout).toContain('openspec-default'); // Default schema
 
         // Instructions command should work
         const instrResult = await runCLI(
