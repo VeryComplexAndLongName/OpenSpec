@@ -9,4 +9,4 @@
 
 - [x] 2.1 Document preferred and legacy names, default selection and override precedence; synchronize affected generated workflow guidance where needed.
 - [x] 2.2 Verify CLI instructions/templates/status parity for both names, old project config preservation, new default metadata and Windows paths.
-- [ ] 2.3 Run build/lint, focused and full regressions, strict validation and CI on supported platforms; record evidence before archiving.
+- [x] 2.3 Run build/lint, focused and full regressions, strict validation and CI on supported platforms; record evidence before archiving.
