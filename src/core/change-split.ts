@@ -49,7 +49,8 @@ export function splitChange(projectRoot: string, sourceId: string, options: { sl
     if (fs.existsSync(target) && !fs.statSync(target).isFile()) throw new Error(`Split expects a regular file: ${target}`);
   }
   const taskFiles = resolveTaskFilesForChange(source, projectRoot);
-  if (taskFiles.some(file => path.resolve(file) !== path.join(source, 'tasks.md'))) {
+  const conventionalTasks = FileSystemUtils.canonicalizeExistingPath(path.join(source, 'tasks.md'));
+  if (taskFiles.some(file => FileSystemUtils.canonicalizeExistingPath(file) !== conventionalTasks)) {
     throw new Error('This workflow tracks custom task paths. Split those artifacts explicitly before using the conventional proposal.md/tasks.md scaffolder.');
   }
   const originalMetadata = previous

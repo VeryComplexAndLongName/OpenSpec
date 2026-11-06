@@ -125,4 +125,14 @@ describe('change stack planning', () => {
     expect(loadChangeStack(root).issues.filter(issue=>issue.level==='ERROR')).toEqual([]);
     expect(loadChangeStack(root).order).toEqual(['large','large-slice-1','large-slice-2','consumer']);
   });
+  it('recognizes conventional tasks through a canonicalized project path', () => {
+    change('large');
+    const alias = `${root}-alias`;
+    fs.symlinkSync(root, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    try {
+      expect(splitChange(alias, 'large').children).toEqual(['large-slice-1', 'large-slice-2']);
+    } finally {
+      fs.unlinkSync(alias);
+    }
+  });
 });
