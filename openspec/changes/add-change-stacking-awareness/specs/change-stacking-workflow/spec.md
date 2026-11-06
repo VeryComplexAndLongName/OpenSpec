@@ -1,3 +1,6 @@
+## Purpose
+Coordinate concurrent change plans through explicit dependencies, capability contracts and safe decomposition into independently mergeable child slices.
+
 ## ADDED Requirements
 
 ### Requirement: Stack Metadata Model

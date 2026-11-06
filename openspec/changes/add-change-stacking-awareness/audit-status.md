@@ -1,3 +1,5 @@
-# Status audit, 2026-11-06
+# Implementation audit, 2026-11-06
 
-The proposed stack metadata, dependency/cycle validation and change graph/next command surfaces are not implemented as this proposal requires. Existing basic task/artifact status is not stack-aware acceptance.
+The proposed metadata, graph/next/split, stack validation, archive ordering and
+documentation are implemented. Focused and actual CLI acceptance are recorded
+in verification.md. Full server CI remains open before archive.

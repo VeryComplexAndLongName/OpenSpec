@@ -2,6 +2,10 @@
 
 This guide explains the core ideas behind OpenSpec and how they fit together. For practical usage, see [Getting Started](getting-started.md) and [Workflows](workflows.md).
 
+Concurrent proposals can declare optional dependency and capability metadata.
+See [Change stacks](change-stacks.md) for `dependsOn`, `provides`, `requires`,
+`touches`, parent/child slices and migration from narrative ordering files.
+
 ## Philosophy
 
 OpenSpec is built around four principles:

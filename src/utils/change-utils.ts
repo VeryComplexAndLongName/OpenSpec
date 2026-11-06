@@ -6,7 +6,7 @@ import { readProjectConfig } from '../core/project-config.js';
 import { isKebabId } from '../core/id.js';
 import { resolveSchema } from '../core/artifact-graph/resolver.js';
 import { isSpecsArtifactPath } from '../core/artifact-graph/outputs.js';
-import type { ChangeMetadata } from '../core/change-metadata/index.js';
+import { StackMetadataSchema, type ChangeMetadata } from '../core/change-metadata/index.js';
 
 const DEFAULT_SCHEMA = 'spec-driven';
 
@@ -21,7 +21,7 @@ export interface CreateChangeOptions {
   /** Directory that should contain the change directories */
   changesDir?: string;
   /** Additional metadata to persist in the change's .openspec.yaml */
-  metadata?: Partial<Pick<ChangeMetadata, 'goal' | 'affected_areas' | 'initiative'>>;
+  metadata?: Partial<Pick<ChangeMetadata, 'goal' | 'affected_areas' | 'initiative' | 'dependsOn' | 'provides' | 'requires' | 'touches' | 'parent'>>;
 }
 
 /**
@@ -140,6 +140,8 @@ export async function createChange(
   }
 
   const defaultSchema = options.defaultSchema ?? DEFAULT_SCHEMA;
+  // Validate optional stack input before materializing a root or change folder.
+  const stackMetadata = StackMetadataSchema.parse(options.metadata ?? {});
 
   // Determine schema: explicit option → project config → supplied default
   let schemaName: string;
@@ -199,6 +201,7 @@ export async function createChange(
     created: formatLocalDate(),
     ...(skipsSpecs ? { skip_specs: true } : {}),
     ...options.metadata,
+    ...stackMetadata,
   }, projectRoot);
 
   return { schema: schemaName, changeDir };

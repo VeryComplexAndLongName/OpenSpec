@@ -36,6 +36,11 @@ export interface NewChangeOptions {
   storePath?: string;
   initiative?: string;
   areas?: string;
+  dependsOn?: string;
+  provides?: string;
+  requires?: string;
+  touches?: string;
+  parent?: string;
   json?: boolean;
 }
 
@@ -154,6 +159,11 @@ export async function newChangeCommand(name: string | undefined, options: NewCha
       changesDir: root.changesDir,
       metadata: {
         ...(options.goal ? { goal: options.goal } : {}),
+        ...Object.fromEntries(['dependsOn', 'provides', 'requires', 'touches'].flatMap(key => {
+          const value = options[key as 'dependsOn'];
+          return value === undefined ? [] : [[key, value.split(',').map(item => item.trim())]];
+        })),
+        ...(options.parent !== undefined ? { parent: options.parent } : {}),
       },
     });
 
