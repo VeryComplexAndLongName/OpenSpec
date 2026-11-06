@@ -13,6 +13,17 @@ The `AIToolOption` interface SHALL include scope support metadata in addition to
 - **THEN** resolver behavior SHALL default that surface to project-only support
 - **AND** effective scope resolution SHALL apply normal preferred/fallback rules against that default
 
+#### Scenario: Interface includes skillsDir field
+
+- **WHEN** a tool entry is defined in `AI_TOOLS` that supports skill generation
+- **THEN** it SHALL include a `skillsDir` field specifying the project-local base directory (e.g., `.claude`)
+
+#### Scenario: Skills path follows Agent Skills spec
+
+- **WHEN** generating skills for a tool with `skillsDir: '.claude'`
+- **THEN** skills SHALL be written to `<projectRoot>/<skillsDir>/skills/`
+- **AND** the `/skills` suffix is appended per Agent Skills specification
+
 ### Requirement: Path configuration for supported tools
 Path metadata SHALL support both project and global install targets via resolver logic.
 
@@ -33,3 +44,57 @@ Path metadata SHALL support both project and global install targets via resolver
 - **AND** platform is Windows
 - **THEN** command targets SHALL resolve to `%CODEX_HOME%\prompts` when `CODEX_HOME` is set
 - **AND** SHALL otherwise resolve to `%USERPROFILE%\.codex\prompts`
+
+#### Scenario: Claude Code paths defined
+
+- **WHEN** looking up the `claude` tool
+- **THEN** `skillsDir` SHALL be `.claude`
+
+#### Scenario: Cursor paths defined
+
+- **WHEN** looking up the `cursor` tool
+- **THEN** `skillsDir` SHALL be `.cursor`
+
+#### Scenario: Windsurf paths defined
+
+- **GIVEN** RETIRED — Windsurf was rebranded to Devin Desktop and `windsurf` is no longer a tool id
+- **WHEN** looking up the `windsurf` tool
+- **THEN** no `AI_TOOLS` entry SHALL exist for it
+- **AND** the id SHALL resolve to `devin`, whose `skillsDir` is `.devin` and whose `detectionPaths` still include the legacy `.windsurf`
+
+#### Scenario: Kimi Code paths defined
+
+- **WHEN** looking up the `kimi` tool
+- **THEN** `skillsDir` SHALL be `.kimi-code`
+- **AND** OpenSpec-managed skills remaining under the legacy `.kimi/skills` directory SHALL be migrated to `.kimi-code/skills` during init and update, preserving user files
+
+#### Scenario: Hermes Agent paths defined
+
+- **WHEN** looking up the `hermes` tool
+- **THEN** `skillsDir` SHALL be `.hermes`
+- **AND** `setupNote` SHALL explain that project `.hermes/skills` must be added to `skills.external_dirs` in `~/.hermes/config.yaml`
+- **AND** `openspec init` and `openspec update` SHALL display the note whenever `hermes` is configured
+
+#### Scenario: Devin Desktop paths defined
+
+- **WHEN** looking up the `devin` tool
+- **THEN** `skillsDir` SHALL be `.devin`
+- **AND** workflow files SHALL be written to `.devin/workflows/opsx-<id>.md`
+- **AND** `detectionPaths` SHALL include both `.devin` and the legacy `.windsurf`, so a project set up before the rebrand is still recognized
+
+#### Scenario: Retired tool ids resolve on the command line
+
+- **WHEN** a retired brand is named on the command line, such as `--tools windsurf`
+- **THEN** it SHALL resolve to the current tool id `devin` rather than erroring as unknown
+- **AND** generation SHALL write the current directory `.devin/`, not the retired one
+
+#### Scenario: Tools without skillsDir
+
+- **WHEN** a tool has no `skillsDir` defined
+- **THEN** skill generation SHALL error with message indicating the tool is not supported
+
+#### Scenario: Legacy Windsurf tool ID
+
+- **WHEN** initializing with `openspec init --tools windsurf`
+- **THEN** the `windsurf` alias SHALL resolve to `devin`
+- **AND** when skill delivery is enabled, skills SHALL be generated under `.devin/skills/`, not `.windsurf/skills/`
