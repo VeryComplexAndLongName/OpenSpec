@@ -2,6 +2,11 @@
 
 The OpenSpec CLI (`openspec`) provides terminal commands for project setup, validation, status inspection, and management. These commands complement the AI slash commands (like `/opsx:propose`) documented in [Commands](commands.md).
 
+
+The preferred standard workflow name is `openspec-default`; `spec-driven`
+remains a fully supported alias. Existing project configs need no migration.
+See [Schema aliases](schema-aliases.md) for selection and override behavior.
+
 ## Summary
 
 | Category | Commands | Purpose |
@@ -332,7 +337,7 @@ Doctor is diagnostic-only; it reports missing roots, metadata mismatches, and in
 A project repo can declare which stores its work draws on in `openspec/config.yaml`:
 
 ```yaml
-schema: spec-driven
+schema: openspec-default
 references:
   - team-context
 ```
@@ -668,7 +673,7 @@ openspec archive update-ci-config --skip-specs
 
 ```yaml
 # openspec/changes/retire-legacy/.openspec.yaml
-schema: spec-driven
+schema: openspec-default
 retire_capabilities: true
 ```
 
@@ -768,7 +773,7 @@ openspec status --change add-dark-mode --json
 
 ```
 Change: add-dark-mode
-Schema: spec-driven
+Schema: openspec-default
 Progress: 2/4 artifacts complete
 
 [x] proposal
@@ -784,7 +789,7 @@ A change that declares `skip_specs: true` shows its specs stage as `[~] specs (s
 ```json
 {
   "changeName": "add-dark-mode",
-  "schemaName": "spec-driven",
+  "schemaName": "openspec-default",
   "isPlanningComplete": false,
   "isComplete": false,
   "applyRequires": ["tasks"],
@@ -891,7 +896,7 @@ openspec templates [options]
 
 | Option | Description |
 |--------|-------------|
-| `--schema <name>` | Schema to inspect (default: `spec-driven`) |
+| `--schema <name>` | Schema to inspect (default: `openspec-default`) |
 | `--json` | Output as JSON |
 
 **Examples:**
@@ -910,7 +915,7 @@ openspec templates --json
 **Output (text):**
 
 ```
-Schema: spec-driven
+Schema: openspec-default
 
 Templates:
   proposal  → ~/.openspec/schemas/spec-driven/templates/proposal.md

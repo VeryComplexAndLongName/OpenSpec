@@ -8,7 +8,7 @@ import { resolveSchema } from '../core/artifact-graph/resolver.js';
 import { isSpecsArtifactPath } from '../core/artifact-graph/outputs.js';
 import type { ChangeMetadata } from '../core/change-metadata/index.js';
 
-const DEFAULT_SCHEMA = 'spec-driven';
+import { DEFAULT_SCHEMA } from '../core/artifact-graph/schema-names.js';
 
 /**
  * Options for creating a change.

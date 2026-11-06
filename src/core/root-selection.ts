@@ -1,3 +1,4 @@
+import { DEFAULT_SCHEMA } from './artifact-graph/schema-names.js';
 /**
  * Shared OpenSpec root resolution for normal commands.
  *
@@ -63,7 +64,7 @@ export interface ResolvedOpenSpecRoot {
   changesDir: string;
   specsDir: string;
   archiveDir: string;
-  defaultSchema: 'spec-driven';
+  defaultSchema: typeof DEFAULT_SCHEMA;
   source: OpenSpecRootSource;
   storeId?: string;
 }
@@ -124,7 +125,7 @@ function makeRoot(
     changesDir: path.join(rootPath, 'openspec', 'changes'),
     specsDir: path.join(rootPath, 'openspec', 'specs'),
     archiveDir: path.join(rootPath, 'openspec', 'changes', 'archive'),
-    defaultSchema: 'spec-driven',
+    defaultSchema: DEFAULT_SCHEMA,
     source,
     ...(storeId ? { storeId } : {}),
   };
