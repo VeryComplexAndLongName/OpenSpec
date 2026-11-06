@@ -34,3 +34,23 @@ tools before confirmation; summaries report usable skills instead of skips.
 
 Complete server CI and archive are pending. Public docs include the delivery
 matrix and unsupported-tool remediation. No user/global install files changed.
+
+
+## Final server acceptance
+
+All checks passed on exact feature commit 259306d6d66f3aad53f6eba30b64af91b705d587.
+- All checks passed: skipped; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127862097445
+- Test: success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127862094183
+- All checks passed: success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127862094136
+- Nix Flake Validation: skipped; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127857603426
+- Detect changes: success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127857530048
+- Test (macos-bash): success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127857529905
+- Test (linux-bash): success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127857529789
+- Validate Release Tracking: success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127857529781
+- Test (windows-pwsh): success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127857529712
+- Lint & Type Check: success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448193/job/127857529517
+- Website Lockfile Drift: success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448093/job/127857528873
+- Dependency Review: success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448093/job/127857528781
+- Audit: success; https://github.com/VeryComplexAndLongName/OpenSpec/actions/runs/42207448093/job/127857528558
+
+The remaining CI task is complete. The completed change is synchronized and archived below.

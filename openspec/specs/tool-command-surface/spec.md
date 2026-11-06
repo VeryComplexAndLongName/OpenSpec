@@ -1,4 +1,9 @@
-## ADDED Requirements
+# tool-command-surface Specification
+
+## Purpose
+Classify each tool's command surface so delivery keeps selected workflows invocable and rejects incompatible commands-only plans before changing files.
+
+## Requirements
 
 ### Requirement: Explicit command surface metadata
 Tool metadata SHALL optionally declare commandSurface as adapter, skills-invocable or none. The shared resolver SHALL use explicit metadata before inferring adapter presence, and SHALL infer none when neither is present.

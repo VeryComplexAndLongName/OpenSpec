@@ -48,6 +48,6 @@
 
 - [x] 6.1 Run targeted tests: `test/core/init.test.ts` and `test/core/update.test.ts`
 - [x] 6.2 Run any new capability/unit test files added in this change
-- [ ] 6.3 Run full test suite (`pnpm test`) and resolve regressions
+- [x] 6.3 Run full test suite (`pnpm test`) and resolve regressions
 - [x] 6.4 Manual smoke check: `openspec init --tools kimi` with `delivery=commands`
 - [x] 6.5 Manual smoke check: mixed tools (`claude,kimi`) with `delivery=commands`
