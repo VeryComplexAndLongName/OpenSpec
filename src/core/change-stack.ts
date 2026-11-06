@@ -30,7 +30,11 @@ function metadata(directory: string): StackMetadata {
   const file = path.join(directory, '.openspec.yaml');
   if (!fs.existsSync(file)) return {};
   FileSystemUtils.assertPathWithin(directory, file);
-  return StackMetadataSchema.parse(parse(fs.readFileSync(file, 'utf8')) ?? {});
+  const content = fs.readFileSync(file, 'utf8');
+  let value: unknown;
+  try { value = parse(content); }
+  catch (error) { throw new Error(`the file is not valid YAML: ${(error as Error).message}`); }
+  return StackMetadataSchema.parse(value ?? {});
 }
 
 /** Active edges are explicit. Archived IDs resolve by exact historical name or
@@ -134,9 +138,12 @@ export function loadChangeStack(projectRoot: string): ChangeStack {
   return { nodes, order, next, blocked, issues };
 }
 
-export function assertStackArchiveOrder(projectRoot: string, change: string): void {
+export function assertStackArchiveOrder(projectRoot: string, change: string, options: { deferMetadataErrors?: boolean } = {}): void {
   const graph = loadChangeStack(projectRoot);
   const failures = graph.issues.filter(issue => issue.change === change && issue.level === 'ERROR');
+  // Preserve the archive command's existing malformed/unreadable metadata
+  // diagnostics. It calls the full gate after those historical checks too.
+  if (options.deferMetadataErrors && failures.length > 0 && failures.every(issue => issue.message.startsWith('Invalid stack metadata for '))) return;
   if (failures.length > 0) throw new Error(failures.map(issue => issue.message).join('\n'));
   const node = graph.nodes.find(node => node.id === change);
   const active = new Set(graph.nodes.map(node => node.id));
