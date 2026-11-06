@@ -1,3 +1,4 @@
+import { DEFAULT_SCHEMA } from '../core/artifact-graph/schema-names.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as yaml from 'yaml';
@@ -202,7 +203,7 @@ export function resolveSchemaForChange(
   }
 
   // 4. Default
-  return 'spec-driven';
+  return DEFAULT_SCHEMA;
 }
 
 export interface MetadataMarker {

@@ -11,6 +11,31 @@ For each selected tool, OpenSpec can install:
 
 Codex is skills-only: OpenSpec installs `.agents/skills/openspec-*/SKILL.md` for Codex even when delivery is set to `commands`, and it does not generate Codex custom prompt files. Existing OpenSpec-managed skills under the legacy `.codex/skills` path are reconciled after their replacements are written; custom and divergent files are preserved.
 
+### Command surfaces and delivery
+
+Tools declare how their OpenSpec commands are invoked. `adapter` means command
+files from a registered adapter. `skills-invocable` means managed skills are the
+command surface: Codex, ForgeCode, Kimi Code and Mistral Vibe use this model.
+`none` means no supported OpenSpec command surface has been declared. Explicit
+tool metadata takes precedence; unannotated tools infer adapter support from the
+adapter registry, otherwise `none`. Trae uses its registered command adapter.
+
+| Delivery | Adapter | Skills-invocable | No command surface |
+| --- | --- | --- | --- |
+| `both` | Skills and commands | Invocable skills | Skills |
+| `skills` | Skills; managed commands removed | Invocable skills | Skills |
+| `commands` | Commands; managed skills removed | Invocable skills retained/generated | Error before any writes |
+
+For example, `commands` with `--tools claude,kimi` writes Claude command files
+and Kimi skills. Kimi uses `/skill:openspec-propose`; ForgeCode and Vibe use
+`/openspec-propose`; Codex uses `$openspec-propose`. Init and update report this
+as the expected command surface. Repeated updates do not remove these skills.
+
+If commands-only selection fails, the error lists incompatible tool IDs. Set
+`openspec config set delivery both` or `openspec config set delivery skills`,
+then rerun init/update. Compatibility is checked before migration, cleanup or
+partial generation, so existing files are preserved on failure.
+
 By default, OpenSpec uses the `core` profile, which includes:
 - `propose`
 - `explore`

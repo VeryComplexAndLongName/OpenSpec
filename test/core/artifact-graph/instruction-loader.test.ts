@@ -153,7 +153,7 @@ describe('instruction-loader', () => {
     it('should load context with default schema', () => {
       const context = loadChangeContext(tempDir, 'my-change');
 
-      expect(context.schemaName).toBe('spec-driven');
+      expect(context.schemaName).toBe('openspec-default');
       expect(context.changeName).toBe('my-change');
       expect(context.graph.getName()).toBe('spec-driven');
       expect(context.completed.size).toBe(0);
@@ -216,7 +216,7 @@ describe('instruction-loader', () => {
 
       const context = loadChangeContext(tempDir, 'my-change');
 
-      expect(context.schemaName).toBe('spec-driven');
+      expect(context.schemaName).toBe('openspec-default');
     });
 
     it('should mark specs complete when metadata declares skip_specs', () => {
@@ -312,7 +312,7 @@ describe('instruction-loader', () => {
 
       expect(instructions.changeName).toBe('my-change');
       expect(instructions.artifactId).toBe('proposal');
-      expect(instructions.schemaName).toBe('spec-driven');
+      expect(instructions.schemaName).toBe('openspec-default');
       expect(instructions.outputPath).toBe('proposal.md');
     });
 
@@ -706,7 +706,7 @@ rules:
       const status = formatChangeStatus(context);
 
       expect(status.changeName).toBe('my-change');
-      expect(status.schemaName).toBe('spec-driven');
+      expect(status.schemaName).toBe('openspec-default');
       expect(status.isPlanningComplete).toBe(false);
       expect(status.isComplete).toBe(false);
 

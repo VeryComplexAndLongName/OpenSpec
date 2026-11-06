@@ -110,7 +110,7 @@ export function resolveSharedSkillWriters(
     }
 
     const skillsNative = group.filter(
-      (tool) => resolveCommandSurfaceCapability(tool.value) !== 'adapter-backed'
+      (tool) => resolveCommandSurfaceCapability(tool.value) !== 'adapter'
     );
     const preferredPool = skillsNative.length > 0 ? skillsNative : group;
     const marked = readSharedSkillTarget(projectPath, root);

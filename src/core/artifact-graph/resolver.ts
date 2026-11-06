@@ -5,6 +5,7 @@ import { getGlobalDataDir } from '../global-config.js';
 import { FileSystemUtils } from '../../utils/file-system.js';
 import { parseSchema, SchemaValidationError } from './schema.js';
 import type { SchemaYaml } from './types.js';
+import { DEFAULT_SCHEMA, LEGACY_DEFAULT_SCHEMA, isDefaultSchemaName, schemaLookupNames } from './schema-names.js';
 
 /**
  * Error thrown when loading a schema fails.
@@ -148,24 +149,18 @@ export function getSchemaDir(
     return null;
   }
 
-  // 1. Check project-local directory (if projectRoot provided)
-  if (projectRoot) {
-    const projectDir = getSchemaCandidateDir(getProjectSchemasDir(projectRoot), name);
-    if (projectDir) {
-      return projectDir;
+  // Keep project > user > package precedence. Within a tier both standard
+  // names choose the same definition, preferring the new directory if present.
+  const roots = [
+    ...(projectRoot ? [getProjectSchemasDir(projectRoot)] : []),
+    getUserSchemasDir(),
+    getPackageSchemasDir(),
+  ];
+  for (const root of roots) {
+    for (const candidateName of schemaLookupNames(name)) {
+      const candidate = getSchemaCandidateDir(root, candidateName);
+      if (candidate) return candidate;
     }
-  }
-
-  // 2. Check user override directory
-  const userDir = getSchemaCandidateDir(getUserSchemasDir(), name);
-  if (userDir) {
-    return userDir;
-  }
-
-  // 3. Check package built-in directory
-  const packageDir = getSchemaCandidateDir(getPackageSchemasDir(), name);
-  if (packageDir) {
-    return packageDir;
   }
 
   return null;
@@ -283,6 +278,12 @@ export function listSchemas(projectRoot?: string): string[] {
     }
   }
 
+  schemas.delete(DEFAULT_SCHEMA);
+  schemas.delete(LEGACY_DEFAULT_SCHEMA);
+  if (getSchemaDir(DEFAULT_SCHEMA, projectRoot)) {
+    schemas.add(DEFAULT_SCHEMA);
+    schemas.add(LEGACY_DEFAULT_SCHEMA);
+  }
   return Array.from(schemas).sort();
 }
 
@@ -379,5 +380,20 @@ export function listSchemasWithInfo(projectRoot?: string): SchemaInfo[] {
     }
   }
 
-  return schemas.sort((a, b) => a.name.localeCompare(b.name));
+  const result = schemas.filter(schema => !isDefaultSchemaName(schema.name));
+  const standardDir = getSchemaDir(DEFAULT_SCHEMA, projectRoot);
+  if (standardDir) {
+    try {
+      const schema = resolveSchema(DEFAULT_SCHEMA, projectRoot);
+      const source: SchemaInfo['source'] = projectRoot && path.dirname(standardDir) === getProjectSchemasDir(projectRoot)
+        ? 'project'
+        : path.dirname(standardDir) === getUserSchemasDir() ? 'user' : 'package';
+      for (const name of [DEFAULT_SCHEMA, LEGACY_DEFAULT_SCHEMA]) {
+        result.push({ name, description: schema.description || '', artifacts: schema.artifacts.map(a => a.id), source });
+      }
+    } catch {
+      // As with other names, invalid effective definitions are not advertised.
+    }
+  }
+  return result.sort((a, b) => a.name.localeCompare(b.name));
 }

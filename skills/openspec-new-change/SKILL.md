@@ -61,7 +61,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
    Use the returned `planningHome`, `changeRoot`, `artifactPaths`, and `nextSteps` instead of assuming repo-local paths.
 
 5. **Get instructions for the first artifact**
-   The first artifact depends on the schema (e.g., `proposal` for spec-driven).
+   The first artifact depends on the schema (e.g., `proposal` for openspec-default).
    Check the status output to find the first artifact with status "ready".
    ```bash
    openspec instructions <first-artifact-id> --change "<name>"

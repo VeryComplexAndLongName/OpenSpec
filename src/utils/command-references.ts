@@ -206,7 +206,7 @@ export function getTransformerForTool(
   capability: CommandSurfaceCapability,
   invocation: CommandInvocation | undefined
 ): ((text: string) => string) | undefined {
-  if (delivery === 'skills' || capability !== 'adapter-backed') {
+  if (delivery === 'skills' || capability !== 'adapter') {
     return toolId === 'codex'
       ? transformToCodexCompatibleSkillReferences
       : getSkillReferenceTransformer(toolId);
