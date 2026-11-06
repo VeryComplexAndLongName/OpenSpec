@@ -22,7 +22,8 @@ export interface ToolProfile {
  * remain observable; no second, drifting list of supported tool IDs exists. */
 export class ToolProfileRegistry {
   static from(tool: AIToolOption): ToolProfile {
-    const commandAdapter = CommandAdapterRegistry.get(tool.value);
+    const commandAdapter = CommandAdapterRegistry.has(tool.value)
+      ? CommandAdapterRegistry.get(tool.value) : undefined;
     const commandSurface = tool.commandSurface ?? (commandAdapter ? 'adapter' : 'none');
     const invocation = commandAdapter ? getInvocationForAdapter(commandAdapter) : undefined;
     return {
