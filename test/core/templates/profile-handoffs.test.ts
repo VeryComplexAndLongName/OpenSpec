@@ -15,6 +15,7 @@ import {
 } from '../../../src/core/shared/skill-generation.js';
 import { toolSupportsSkills } from '../../../src/core/shared/skill-paths.js';
 import { getTransformerForTool } from '../../../src/utils/command-references.js';
+import { DEFAULT_SCHEMA } from '../../../src/core/artifact-graph/schema-names.js';
 
 const profiles = [
   { name: 'core', workflows: getProfileWorkflows('core') },
@@ -28,12 +29,23 @@ const skillWorkflows = new Map(getSkillTemplates().map(({ dirName, workflowId })
 // Unknown references also fail: a typo must not make the guard silently pass.
 function expectInstalledReferences(content: string, workflows: readonly string[], label: string): void {
   for (const match of content.matchAll(/[/@]opsx[:-]([\w-]+)|\b(openspec-[\w-]+)/g)) {
+    // The preferred schema name shares the skill prefix. A bare schema value
+    // is not an invocation; prefixed invocations must still be validated.
+    if (match[2] === DEFAULT_SCHEMA && !/[/@$:]/.test(content[(match.index ?? 0) - 1] ?? '')) continue;
     const workflow = match[1] ?? skillWorkflows.get(match[2]);
     expect(workflows, `${label}: unavailable workflow reference ${match[0]}`).toContain(workflow);
   }
 }
 
 describe('workflow reference guard', () => {
+  it('accepts the bare schema name without treating it as a workflow', () => {
+    expect(() => expectInstalledReferences('schema: openspec-default; --schema "openspec-default"', [], 'schema')).not.toThrow();
+  });
+  it.each(['$openspec-default', '/openspec-default', '/skill:openspec-default'])(
+    'still rejects an invalid invocation named %s', reference => {
+      expect(() => expectInstalledReferences(reference, [], 'guard')).toThrow('unavailable workflow reference');
+    },
+  );
   it.each(['/opsx:continue', '@opsx-continue', '$openspec-continue-change', 'the openspec-sync-specs skill'])(
     'rejects an unavailable workflow in %s', (reference) => {
       expect(() => expectInstalledReferences(reference, ['apply'], 'guard')).toThrow('unavailable workflow reference');

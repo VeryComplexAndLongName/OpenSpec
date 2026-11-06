@@ -96,7 +96,7 @@ describe('status --all', () => {
     const entry = json.changes[0];
     // Full ChangeStatus shape, same as the single-change payload
     expect(entry.changeName).toBe('json-change');
-    expect(entry.schemaName).toBe('spec-driven');
+    expect(entry.schemaName).toBe('openspec-default');
     expect(entry.isComplete).toBe(false);
     expect(Array.isArray(entry.artifacts)).toBe(true);
     expect(entry.artifacts).toHaveLength(4);
@@ -187,7 +187,7 @@ describe('status --all', () => {
     expect(broken.artifacts).toBeUndefined();
 
     const good = json.changes.find((c: any) => c.changeName === 'good-change');
-    expect(good.schemaName).toBe('spec-driven');
+    expect(good.schemaName).toBe('openspec-default');
     expect(good.artifacts).toHaveLength(4);
   });
 
