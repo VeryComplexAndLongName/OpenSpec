@@ -1,3 +1,4 @@
+import { WORKFLOW_COMMAND_IDS } from '../templates/workflow-registrations.js';
 /**
  * Tool Detection Utilities
  *
@@ -38,20 +39,7 @@ export type SkillName = (typeof SKILL_NAMES)[number];
 /**
  * IDs of command templates created by openspec init.
  */
-export const COMMAND_IDS = [
-  'explore',
-  'new',
-  'continue',
-  'apply',
-  'update',
-  'ff',
-  'sync',
-  'archive',
-  'bulk-archive',
-  'verify',
-  'onboard',
-  'propose',
-] as const;
+export const COMMAND_IDS = WORKFLOW_COMMAND_IDS;
 
 export type CommandId = (typeof COMMAND_IDS)[number];
 

@@ -1,3 +1,4 @@
+import { artifactSyncEngine, renderToolWorkflowReference } from './artifact-sync.js';
 /**
  * Init Command
  *
@@ -19,7 +20,7 @@ import {
 } from './project-config.js';
 import { findRepoPlanningRootSync } from './planning-home.js';
 import { ANCHORED_OPENSPEC_DIRS, ensureDirectoryAnchor } from './openspec-root.js';
-import { getSkillReferenceTransformer, getTransformerForTool, usesNaturalLanguageSkillReferences } from '../utils/command-references.js';
+import { getSkillReferenceTransformer, usesNaturalLanguageSkillReferences } from '../utils/command-references.js';
 import {
   AI_TOOLS,
   getUniversalTool,
@@ -32,7 +33,6 @@ import { PALETTE } from './styles/palette.js';
 import { isInteractive } from '../utils/interactive.js';
 import { serializeConfig } from './config-prompts.js';
 import {
-  generateCommands,
   CommandAdapterRegistry,
 } from './command-generation/index.js';
 import {
@@ -53,7 +53,6 @@ import {
   getToolStates,
   getSkillTemplates,
   getCommandContents,
-  generateSkillContent,
   hasGlobalSkillTarget,
   resolveToolSkillsDir,
   toolSupportsSkills,
@@ -74,7 +73,6 @@ import {
   resolveCommandSurfaceCapability,
   assertCommandSurfaceCompatibility,
   skillsCommandSurfaceNote,
-  resolveCommandInvocation,
   shouldGenerateCommandsForTool,
   shouldGenerateSkillsForTool,
   shouldReconcileCommandFilesForTool,
@@ -956,8 +954,6 @@ export class InitCommand {
 
     // Get skill and command templates filtered by profile workflows
     const deliveryIncludesCommands = delivery !== 'skills';
-    const skillTemplates = getSkillTemplates(workflows);
-    const commandContents = getCommandContents(workflows);
 
     // Process each tool
     for (const tool of tools) {
@@ -970,23 +966,10 @@ export class InitCommand {
         // Generate skill files if the selected delivery and tool capability allow skills
         if (shouldGenerateSkills && tool.writesSkills) {
           // Create skill directories and SKILL.md files
-          for (const { template, dirName } of skillTemplates) {
-            const skillDir = path.join(tool.skillsPath, dirName);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-
-            // Generate SKILL.md content with YAML frontmatter including generatedBy
-            const transformer = getTransformerForTool(
-              tool.value,
-              delivery,
-              resolveCommandSurfaceCapability(tool.value),
-              resolveCommandInvocation(tool.value)
-            );
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-
-            // Write the skill file
-            FileSystemUtils.assertPathWithin(tool.skillsRoot, skillFile);
-            await FileSystemUtils.writeFile(skillFile, skillContent);
-          }
+          await artifactSyncEngine.sync({
+            projectRoot: projectPath, toolId: tool.value, delivery, workflows: workflows,
+            version: OPENSPEC_VERSION, surface: 'skill', skillsPath: tool.skillsPath, skillsRoot: tool.skillsRoot,
+          });
           writeSharedSkillTarget(projectPath, tool.value);
         }
         if (
@@ -1002,15 +985,10 @@ export class InitCommand {
 
         // Generate commands if delivery includes commands
         if (shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(commandContents, adapter);
-
-            for (const cmd of generatedCommands) {
-              const commandFile = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmd.path);
-              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
-            }
-          }
+          await artifactSyncEngine.sync({
+            projectRoot: projectPath, toolId: tool.value, delivery, workflows: workflows,
+            version: OPENSPEC_VERSION, surface: 'command', skillsPath: tool.skillsPath, skillsRoot: tool.skillsRoot,
+          });
         } else if (deliveryIncludesCommands) {
           if (resolveCommandSurfaceCapability(tool.value) === 'skills-invocable') {
             skillsInvocableCommandSkips.push(tool.value);
@@ -1354,13 +1332,7 @@ export class InitCommand {
       for (const tool of successfulTools) {
         let hint: string;
         if (shouldGenerateCommandsForTool(tool.value, activeDelivery)) {
-          const transformer = getTransformerForTool(
-            tool.value,
-            activeDelivery,
-            resolveCommandSurfaceCapability(tool.value),
-            resolveCommandInvocation(tool.value)
-          );
-          hint = `Start your first change: ${transformer ? transformer(command) : command} "your idea"`;
+          hint = `Start your first change: ${renderToolWorkflowReference(command, tool.value, activeDelivery)} "your idea"`;
         } else if (shouldGenerateSkillsForTool(tool.value, activeDelivery)) {
           const skillReference = getSkillReferenceTransformer(tool.value)(command);
           // Tools with no slash surface (e.g. Rovo Dev) reference skills as

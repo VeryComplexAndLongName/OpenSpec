@@ -1,19 +1,8 @@
+import { WORKFLOW_SKILL_NAMES } from './templates/workflow-registrations.js';
+
 export const OPENSPEC_DIR_NAME = 'openspec';
 
-export const OPENSPEC_SKILL_NAMES = [
-  'openspec-explore',
-  'openspec-new-change',
-  'openspec-continue-change',
-  'openspec-apply-change',
-  'openspec-update-change',
-  'openspec-ff-change',
-  'openspec-sync-specs',
-  'openspec-archive-change',
-  'openspec-bulk-archive-change',
-  'openspec-verify-change',
-  'openspec-onboard',
-  'openspec-propose',
-] as const;
+export const OPENSPEC_SKILL_NAMES = WORKFLOW_SKILL_NAMES;
 
 export const OPENSPEC_MARKERS = {
   start: '<!-- OPENSPEC:START -->',

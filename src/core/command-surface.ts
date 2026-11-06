@@ -1,5 +1,5 @@
-import { CommandAdapterRegistry } from './command-generation/index.js';
-import { getInvocationForAdapter, type CommandInvocation } from './command-generation/invocation.js';
+import type { CommandInvocation } from './command-generation/invocation.js';
+import { ToolProfileRegistry } from './tool-profiles.js';
 import type { Delivery } from './global-config.js';
 
 import { AI_TOOLS, type CommandSurfaceCapability } from './config.js';
@@ -11,19 +11,11 @@ export type { CommandSurfaceCapability } from './config.js';
  * tools with no command adapter, which have no command names to spell.
  */
 export function resolveCommandInvocation(toolId: string): CommandInvocation | undefined {
-  const adapter = CommandAdapterRegistry.get(toolId);
-  return adapter ? getInvocationForAdapter(adapter) : undefined;
+  return ToolProfileRegistry.get(toolId)?.invocation;
 }
 
 export function resolveCommandSurfaceCapability(toolId: string): CommandSurfaceCapability {
-  const explicit = AI_TOOLS.find(tool => tool.value === toolId)?.commandSurface;
-  if (explicit) return explicit;
-
-  if (CommandAdapterRegistry.has(toolId)) {
-    return 'adapter';
-  }
-
-  return 'none';
+  return ToolProfileRegistry.get(toolId)?.commandSurface ?? 'none';
 }
 
 export function shouldGenerateSkillsForTool(toolId: string, delivery: Delivery): boolean {

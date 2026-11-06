@@ -274,6 +274,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
             description: 'Optional goal metadata to store with the change',
             takesValue: true,
           },
+          { name: 'depends-on', description: 'Comma-separated predecessor change IDs', takesValue: true },
+          { name: 'provides', description: 'Comma-separated provided capability markers', takesValue: true },
+          { name: 'requires', description: 'Comma-separated required capability markers', takesValue: true },
+          { name: 'touches', description: 'Comma-separated advisory areas', takesValue: true },
+          { name: 'parent', description: 'Parent change ID', takesValue: true },
           {
             name: 'schema',
             description: 'Workflow schema to use',
@@ -490,9 +495,21 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   },
   {
     name: 'change',
-    description: 'Manage OpenSpec change proposals (deprecated)',
+    description: 'Manage OpenSpec change proposals and stack planning',
     flags: [],
     subcommands: [
+      { name: 'graph', description: 'Show change dependency graph and order', flags: [COMMON_FLAGS.json, COMMON_FLAGS.store] },
+      { name: 'next', description: 'Show unblocked change candidates', flags: [COMMON_FLAGS.json, COMMON_FLAGS.store] },
+      {
+        name: 'split', description: 'Scaffold linked child plans while preserving the source',
+        acceptsPositional: true, positionalType: 'change-id',
+        positionals: [{ name: 'change-id', type: 'change-id' }],
+        flags: [COMMON_FLAGS.json, COMMON_FLAGS.store,
+          { name: 'slices', description: 'Comma-separated child IDs', takesValue: true },
+          { name: 'overwrite', description: 'Regenerate managed stubs of the original child set' },
+          { name: 'force', description: 'Alias for --overwrite' },
+        ],
+      },
       {
         name: 'show',
         description: 'Show a change proposal',

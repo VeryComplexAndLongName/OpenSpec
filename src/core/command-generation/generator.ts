@@ -5,8 +5,10 @@
  */
 
 import type { CommandContent, ToolCommandAdapter, GeneratedCommand } from './types.js';
-import { getInvocationForAdapter, needsInvocationRewrite } from './invocation.js';
-import { transformCommandInvocations } from '../../utils/command-references.js';
+import { getInvocationForAdapter } from './invocation.js';
+import { runArtifactTransforms, DEFAULT_ARTIFACT_TRANSFORMS, type ArtifactTransform, type ArtifactTransformContext } from '../templates/artifact-transforms.js';
+import { ToolProfileRegistry } from '../tool-profiles.js';
+import type { Delivery } from '../global-config.js';
 import { assertWorkflowConditionalsResolved } from '../templates/optional-workflow.js';
 
 /**
@@ -23,9 +25,15 @@ import { assertWorkflowConditionalsResolved } from '../templates/optional-workfl
  * @param adapter - The tool-specific adapter
  * @returns Generated command with path and file content
  */
+export interface CommandGenerationOptions {
+  transforms?: readonly ArtifactTransform[];
+  delivery?: Delivery;
+}
+
 export function generateCommand(
   content: CommandContent,
-  adapter: ToolCommandAdapter
+  adapter: ToolCommandAdapter,
+  options: CommandGenerationOptions = {},
 ): GeneratedCommand {
   assertWorkflowConditionalsResolved(
     content.body,
@@ -33,13 +41,17 @@ export function generateCommand(
   );
 
   const invocation = getInvocationForAdapter(adapter);
-  const formatted = needsInvocationRewrite(invocation)
-    ? { ...content, body: transformCommandInvocations(content.body, invocation) }
-    : content;
+  const profile = ToolProfileRegistry.get(adapter.toolId);
+  const transforms = options.transforms ?? DEFAULT_ARTIFACT_TRANSFORMS.filter(transform => !profile || profile.transforms.includes(transform.id));
+  const context: ArtifactTransformContext = { toolId: adapter.toolId, scope: 'command',
+    workflowId: content.id, delivery: options.delivery ?? 'both', commandSurface: 'adapter', invocation };
+  const formatted = { ...content, body: runArtifactTransforms(content.body, context, 'preAdapter', transforms) };
+  const fileContent = runArtifactTransforms(adapter.formatFile(formatted), context, 'postAdapter', transforms);
+  assertWorkflowConditionalsResolved(fileContent, `Command '${content.id}' contains unresolved workflow conditionals after transforms`);
 
   return {
     path: adapter.getFilePath(content.id),
-    fileContent: adapter.formatFile(formatted),
+    fileContent,
   };
 }
 
@@ -51,7 +63,8 @@ export function generateCommand(
  */
 export function generateCommands(
   contents: CommandContent[],
-  adapter: ToolCommandAdapter
+  adapter: ToolCommandAdapter,
+  options: CommandGenerationOptions = {},
 ): GeneratedCommand[] {
-  return contents.map((content) => generateCommand(content, adapter));
+  return contents.map((content) => generateCommand(content, adapter, options));
 }

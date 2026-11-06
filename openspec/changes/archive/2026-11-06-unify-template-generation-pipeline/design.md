@@ -142,6 +142,15 @@ Adding manifest/profile/transform registries increases conceptual surface area.
 
 ## Implementation Approach
 
+The implemented registry separates pure factory-key metadata from lazy template
+binding to avoid config/profile/template import cycles. It records the existing
+generation and profile presentation orders independently. Tool profiles bind the
+one explicit AI_TOOLS catalog dynamically. Ordered preAdapter/postAdapter
+transforms wrap the existing renderers; per-surface ArtifactSyncEngine calls
+preserve cleanup and shared-root ownership policy in init/update/legacy upgrade.
+The low-level factory facade and reference helpers remain compatible. See
+docs/template-generation.md for the extension and fidelity guardrails.
+
 1. Build manifest + profile + transform types and registries behind current public API
 2. Rewire `getSkillTemplates`/`getCommandContents` to derive from manifest
 3. Introduce `ArtifactSyncEngine` and switch `init` to use it with parity checks
