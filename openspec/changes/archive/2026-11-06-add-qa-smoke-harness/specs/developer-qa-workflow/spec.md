@@ -1,3 +1,7 @@
+## Purpose
+
+Provide one documented local and CI entrypoint for repeatable OpenSpec CLI smoke QA, with a separate entrypoint for interactive terminal acceptance.
+
 ## ADDED Requirements
 
 ### Requirement: Makefile QA Entry Point
@@ -47,3 +51,18 @@ The smoke suite SHALL run CLI scenarios in isolated sandboxes so tests are repea
   - migration when profile is unset
   - delivery cleanup (`both -> skills`, `both -> commands`)
   - commands-only update detection
+
+### Requirement: Shared contributor QA entrypoints
+Contributors SHALL be able to run smoke QA through `make qa` or `make qa-smoke`, and print the interactive checklist through `make qa-interactive`.
+
+#### Scenario: Make is unavailable on Windows
+- **WHEN** a contributor has Node but no Make installed
+- **THEN** documented direct Node commands SHALL run the same smoke harness and print the same checklist
+
+### Requirement: Linux CI exercises the same smoke harness
+Linux CI SHALL execute the contributor smoke entrypoint after building and retain its evidence as a CI artifact even when smoke QA fails.
+
+#### Scenario: A Linux pull request check runs
+- **WHEN** the Linux CLI test job reaches smoke QA
+- **THEN** it SHALL invoke the same smoke entrypoint used locally
+- **AND** failed smoke assertions SHALL fail the job while preserving uploadable evidence
