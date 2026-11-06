@@ -15,7 +15,13 @@ export interface OpenSpecConfig {
 
 export type CommandSurfaceCapability = 'adapter' | 'skills-invocable' | 'none';
 
+export interface ToolInstallScopeSupport {
+  skills?: import('./global-config.js').InstallScope[];
+  commands?: import('./global-config.js').InstallScope[];
+}
+
 export interface AIToolOption {
+  installScopeSupport?: ToolInstallScopeSupport;
   commandSurface?: CommandSurfaceCapability; // Explicit override; otherwise inferred from the command adapter registry
   name: string;
   value: string;
@@ -62,7 +68,7 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Kimi Code', value: 'kimi', available: true, commandSurface: 'skills-invocable', successLabel: 'Kimi Code', skillsDir: '.kimi-code', detectionPaths: ['.kimi-code', '.kimi'] },
   { name: 'Kiro', value: 'kiro', available: true, successLabel: 'Kiro', skillsDir: '.kiro', requiresIdeRestart: true },
   { name: 'Lingma', value: 'lingma', available: true, successLabel: 'Lingma', skillsDir: '.lingma', requiresIdeRestart: true },
-  { name: 'MiniMax Code', value: 'minimax-code', available: true, successLabel: 'MiniMax Code', globalSkillsDir: '.minimax' },
+  { name: 'MiniMax Code', value: 'minimax-code', available: true, successLabel: 'MiniMax Code', globalSkillsDir: '.minimax', installScopeSupport: { skills: ['global'], commands: [] } },
   { name: 'Mistral Vibe', value: 'vibe', available: true, commandSurface: 'skills-invocable', successLabel: 'Mistral Vibe', skillsDir: '.vibe' },
   { name: 'Oh My Pi', value: 'oh-my-pi', available: true, successLabel: 'Oh My Pi', skillsDir: '.omp' },
   { name: 'OpenCode', value: 'opencode', available: true, successLabel: 'OpenCode', skillsDir: '.opencode' },
