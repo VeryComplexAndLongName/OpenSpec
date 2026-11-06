@@ -4,6 +4,8 @@ export interface ValidationIssue {
   level: ValidationLevel;
   path: string;
   message: string;
+  /** Planning advice remains non-blocking even under strict validation. */
+  advisory?: boolean;
   line?: number;
   column?: number;
 }

@@ -1,4 +1,9 @@
-## ADDED Requirements
+# change-stacking-workflow Specification
+
+## Purpose
+Coordinate concurrent change plans through explicit dependencies, capability contracts and safe decomposition into independently mergeable child slices.
+
+## Requirements
 
 ### Requirement: Stack Metadata Model
 The system SHALL support optional metadata on active changes to express sequencing and decomposition relationships.

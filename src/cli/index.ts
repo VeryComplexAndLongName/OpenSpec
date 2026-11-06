@@ -23,6 +23,7 @@ import { ViewCommand } from '../core/view.js';
 import { resolveRootForCommand, toRootOutput } from '../core/root-selection.js';
 import { registerSpecCommand } from '../commands/spec.js';
 import { ChangeCommand } from '../commands/change.js';
+import { registerChangeStackCommands } from '../commands/change-stack.js';
 import { ValidateCommand } from '../commands/validate.js';
 import { ShowCommand } from '../commands/show.js';
 import { CompletionCommand } from '../commands/completion.js';
@@ -416,8 +417,11 @@ const changeCmd = program
   .command('change')
   .description('Manage OpenSpec change proposals');
 
+registerChangeStackCommands(changeCmd);
+
 // Deprecation notice for noun-based commands
-changeCmd.hook('preAction', () => {
+changeCmd.hook('preAction', (_command, actionCommand) => {
+  if (['graph', 'next', 'split'].includes(actionCommand.name())) return;
   console.error('Warning: The "openspec change ..." commands are deprecated. Prefer verb-first commands (e.g., "openspec list", "openspec validate --changes").');
 });
 
@@ -732,6 +736,11 @@ newCmd
   .description('Create a new change directory')
   .option('--description <text>', 'Description to add to README.md')
   .option('--goal <text>', 'Optional goal metadata to store with the change')
+  .option('--depends-on <ids>', 'Comma-separated predecessor change IDs')
+  .option('--provides <markers>', 'Comma-separated capability markers provided')
+  .option('--requires <markers>', 'Comma-separated capability markers required')
+  .option('--touches <areas>', 'Comma-separated advisory capability/spec areas')
+  .option('--parent <id>', 'Parent change ID for a child slice')
   .option('--schema <name>', `Workflow schema to use (default: ${DEFAULT_SCHEMA})`)
   .option('--json', 'Output as JSON')
   .option('--store <id>', STORE_OPTION_DESCRIPTION)

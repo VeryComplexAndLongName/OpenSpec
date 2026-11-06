@@ -28,6 +28,7 @@ import { METADATA_FILENAME, readRetireCapabilitiesMarker, readSkipSpecsMarker } 
 import { confirmPrompt, isNonInteractivePromptError } from '../utils/interactive.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { folderStyleNameProblem } from './id.js';
+import { assertStackArchiveOrder } from './change-stack.js';
 import {
   describeNestedChange,
   findNestedChangesIn,
@@ -1196,6 +1197,13 @@ export class ArchiveCommand {
 
     const skipValidation = options.validate === false || options.noValidate === true;
 
+    // Ordering is a safety condition even when spec validation is skipped.
+    try {
+      assertStackArchiveOrder(root.path, changeName, { deferMetadataErrors: true });
+    } catch (error) {
+      throw new ArchiveBlockedError('archive_stack_blocked', (error as Error).message);
+    }
+
     // Validate specs and change before archiving
     if (!skipValidation) {
       const validator = new Validator();
@@ -1353,6 +1361,12 @@ export class ArchiveCommand {
 
       console.log(chalk.yellow(`[${timestamp}] Validation skipped for change: ${changeName}`));
       console.log(chalk.yellow(`Affected files: ${changeDir}`));
+    }
+
+    try {
+      assertStackArchiveOrder(root.path, changeName);
+    } catch (error) {
+      throw new ArchiveBlockedError('archive_stack_blocked', (error as Error).message);
     }
 
     // Show progress and check for incomplete tasks
